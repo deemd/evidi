@@ -1,0 +1,723 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{fancyvrb}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{caption}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\DefineVerbatimEnvironment{CodeBlock}{Verbatim}{
+    fontsize=\footnotesize,
+    breaklines=true,
+    frame=single,
+    framesep=2mm
+}
+    
+\begin{document}
+\title{Evidi\\ \vspace{0.5 cm} \small \textit{AI-powered assistant for sourcing, summarizing, and optimizing job responses with clarity and automation.}\\}
+
+\author{
+\IEEEauthorblockN{ROBIN, Héloïse}
+\IEEEauthorblockA{\textit{Dept. Computer Science}\\
+\textit{Hanyang University}\\
+Seoul, S. Korea \\
+heloiserobin@hanyang.ac.kr}
+\and
+\IEEEauthorblockN{KHEYAR¸ Adel}
+\IEEEauthorblockA{\textit{Dept. Computer Science}\\
+\textit{Hanyang University}\\
+Seoul, S. Korea \\
+adelkheyar@hanyang.ac.kr}
+\and
+\IEEEauthorblockN{ARM, Jules}
+\IEEEauthorblockA{\textit{Dept. Computer Science}\\
+\textit{Hanyang University}\\
+Seoul, S. Korea \\
+julesarm@hanyang.ac.kr}
+\and
+\IEEEauthorblockN{DESJONQUERES, Nicolas}
+\IEEEauthorblockA{\textit{Dept. Computer Science}\\
+\textit{Hanyang University}\\
+Seoul, S. Korea \\
+nicolasdesjonqueres@hanyang.ac.kr}
+}
+
+\maketitle
+
+\begin{abstract}
+The \textbf{Evidi Job Response Assistant} is a web-based intelligent system that aims to streamline the job application process through automation and artificial intelligence. In the current employment landscape, job seekers face the repetitive task of manually searching, reviewing, and responding to numerous job offers across multiple platforms. This project proposes an integrated and automated workflow capable of retrieving job postings, filtering them based on personalized user criteria, summarizing descriptions using language models, and generating optional draft responses.
+
+The proposed solution integrates several state-of-the-art technologies: \textbf{FastAPI} serves as the backend API for data management, \textbf{MongoDB Atlas} as the cloud database, \textbf{n8n} as the automation and orchestration engine, and \textbf{React + TypeScript} as the frontend interface. In addition, the project leverages \textbf{OpenAI’s GPT-4 API} for natural language summarization and generation. Deployed entirely in the cloud (Render, Vercel, and n8n.cloud), the system demonstrates how AI-driven automation can simplify job searching while maintaining flexibility, scalability, and transparency in a student-deployable environment.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Artificial Intelligence, Workflow Automation, FastAPI, n8n, MongoDB Atlas, React, Job Search, Natural Language Processing
+\end{IEEEkeywords}
+
+\section{Role Assignments}
+
+\begin{table}[htpb]
+\caption{Role Assignments}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.6cm}|>{\centering\arraybackslash}m{1.6cm}|m{4.2cm}|}
+\hline
+\textbf{Role} & \textbf{Name} & \textbf{Task Description} \\
+\hline
+User & Nicolas & Use the app as a real user. Provide feedback on its use of the app. Report bugs, and suggest improvements. \\
+\hline
+Customer & Jules & Provide requirements and feedback. Validate the functional design and user experience. Evaluate deliverables during milestones (UI mockups, MVP demo). Ensure the project meets academic or business goals. \\
+\hline
+Software Developer & Adel & Implement frontend in React (UI, API calls). Develop backend API (authentication, DB, CRUD endpoints). Design and integrate the database (PostgreSQL/Supabase). Configure n8n workflows for automation and AI processing. Test, debug, and deploy components on cloud platforms. \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\captionsetup{labelformat=empty}
+\begin{table}[htpb]\centering
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{1.6cm}|>{\centering\arraybackslash}m{1.6cm}|m{4.2cm}|}
+\hline
+Development Manager & Héloïse & Define project scope, timeline, and milestones. Assign tasks to team members and manage version control (Git). Ensure coherence between frontend, backend, and automation. Supervise testing, deployment, and documentation. Communicate with the customer and ensure project quality. \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+%---------- INTRO SECTION
+
+\section{Introduction}
+
+\subsection{Motivation}
+In today's hyperconnected society, the process of job seeking has evolved into a complex digital endeavor. With the exponential growth of online recruitment platforms and professional networks, users are exposed to thousands of potential opportunities daily. While this abundance theoretically broadens access to employment, it also introduces new forms of cognitive overload. Candidates must continuously navigate through heterogeneous data (job descriptions, skill requirements, company cultures, and application procedures) dispersed across numerous websites and communication channels.  
+
+Traditionally, this process demands substantial time and emotional investment. Job seekers often spend hours manually reviewing listings, extracting relevant qualifications, and tailoring cover letters for each posting. Over time, this repetitive task can lead to fatigue, demotivation, and ultimately, missed opportunities. Meanwhile, organizations receive massive volumes of generic applications, highlighting the inefficiency and asymmetry in the modern recruitment pipeline.  
+
+With the rapid progress in \textbf{Artificial Intelligence (AI)}, particularly in \textbf{Natural Language Processing (NLP)} and workflow automation, there is a unique opportunity to reimagine this process. By automating the collection, analysis, and synthesis of job offers, it becomes possible not only to increase efficiency but also to provide more equitable and intelligent access to employment information. The motivation behind this research is therefore to develop a transparent, modular, and accessible tool that empowers individuals to leverage automation ethically and effectively in their job search journey.
+
+\subsection{Problem Statement (User Needs)}
+Despite the apparent convenience of existing online job boards such as \textbf{LinkedIn}, \textbf{Glassdoor}, or \textbf{Indeed}, users continue to face several pain points. These platforms offer keyword filters and alerts, yet they remain fundamentally passive, incapable of adaptive reasoning or personalized contextualization. Users must still screen each listing, interpret nuanced requirements, and manually generate application materials.  
+
+Automation services such as \textbf{Zapier} or \textbf{Make (Integromat)} provide general workflow integration, but they are not designed for employment-specific contexts. They lack semantic understanding of job-related data, leading to rigid automation pipelines. Furthermore, while advanced AI systems like \textbf{ChatGPT} can produce natural language text, they require extensive manual prompting and lack connectivity with dynamic job feeds or filtering logic.  
+
+From an educational and research perspective, this absence of a unified, open, and domain-specific framework creates a barrier for both practitioners and students wishing to experiment with AI-driven automation in real-world contexts. Hence, there is a clear need for a customizable, intelligent, and transparent ecosystem that integrates job data retrieval, summarization, and response generation into a single, cloud-ready platform.
+
+\subsection{Existing Solutions}
+A comparative analysis of current tools reveals several partial solutions, yet none fully address the multidimensional needs of job seekers.  
+
+Platforms such as \textbf{Simplify} and \textbf{LoopCV} attempt to streamline the application process by automating repetitive form-filling or submission tasks. However, their infrastructures are proprietary and non-extensible, limiting opportunities for customization or academic exploration. Similarly, \textbf{Huntr} provides efficient tracking for ongoing applications but lacks an AI-driven decision layer capable of analyzing or ranking offers intelligently.  
+
+On the other hand, low-code automation platforms such as \textbf{Zapier} and \textbf{n8n} allow users to design workflows visually, connecting data sources and web APIs. While powerful, they operate as generic middleware and do not incorporate domain-specific heuristics such as keyword extraction, offer classification, or motivation-letter personalization. Finally, AI-driven assistants like \textbf{ChatGPT} or \textbf{Claude} can generate text upon request but cannot autonomously interact with job data sources or maintain persistent user contexts across sessions.  
+
+This review highlights the fragmented nature of current technological ecosystems and underscores the necessity of an integrated, open-source framework where AI models, automation logic, and user interfaces converge seamlessly.
+
+\subsection{Proposed Solution}
+The \textbf{Evidi Job Response Assistant} is designed to address these gaps by combining the flexibility of modern cloud computing with the intelligence of advanced language models. The proposed system features a modular architecture comprising four key layers: \textbf{data ingestion}, \textbf{AI-driven processing}, \textbf{backend management}, and \textbf{interactive visualization}.  
+
+Through \textbf{n8n}, the system automatically retrieves job offers from diverse sources such as RSS feeds, email inboxes, and public APIs. These offers are then filtered through user-defined criteria (including domain, skills, or salary range) and stored in a \textbf{MongoDB Atlas} database managed via a \textbf{FastAPI} backend. The backend exposes RESTful endpoints that feed into a \textbf{React + TypeScript} frontend, where users can visualize offers, summaries, and application drafts.  
+
+An \textbf{AI layer}, powered by \textbf{OpenAI GPT-4}, performs advanced summarization and generates personalized application responses. The combination of these technologies results in a robust workflow that minimizes manual intervention, enhances precision, and supports reproducible research. Beyond its technical contributions, this project aims to demonstrate a scalable model for \textbf{AI-assisted decision-making} and to provide an educational reference for integrating automation, data engineering, and language intelligence in real-world employment contexts.
+
+
+
+
+%---------- REQUIREMENTS
+
+
+\section{Requirements}
+
+\subsection{User Authentication and Management}
+
+\noindent
+The system must provide secure and user-friendly mechanisms for registration, authentication, and session management.
+
+\begin{itemize}
+    \item \textbf{Registration:}  
+    New users must create an account using a valid email address and password. Upon submission, an email verification code is sent automatically. Only verified accounts gain access to the main interface.
+    
+    \item \textbf{Password Security:}  
+    All user passwords are hashed using a robust cryptographic algorithm (e.g., \textbf{SHA-256} or \textbf{bcrypt}) prior to database storage. Plaintext passwords are never stored or transmitted.
+    
+    \item \textbf{Login:}  
+    The login process validates the provided credentials against stored hash values. Upon success, a \textbf{JWT (JSON Web Token)} is issued to manage authenticated sessions securely across the frontend and backend.
+    
+    \item \textbf{Account Recovery:}  
+    In case of forgotten credentials, the system provides a password reset flow via email-based verification. Expired or invalid tokens are automatically rejected to maintain security.
+\end{itemize}
+
+\subsection{User Criteria Management}
+
+\noindent
+Users can define personalized job search criteria that guide the system’s filtering and retrieval mechanisms.
+
+\begin{itemize}
+    \item \textbf{Criteria Creation:}  
+    Users specify parameters such as target keywords, job titles, industries, required skills, employment type (e.g., remote, full-time, internship), and geographic location.
+    
+    \item \textbf{Criteria Persistence:}  
+    Each user’s preferences are stored in the cloud database under a unique user identifier, allowing the same filters to be reused automatically for subsequent job searches.
+    
+    \item \textbf{Dynamic Modification:}  
+    The user interface enables modification or deletion of existing criteria. Any change triggers an immediate synchronization across the backend and automation workflows.
+    
+    \item \textbf{Validation:}  
+    Input validation ensures the accuracy of filter definitions, preventing empty or malformed entries before committing data to storage.
+\end{itemize}
+
+\subsection{Job Offer Ingestion System}
+
+\noindent
+The ingestion module is responsible for automatically collecting job offers from multiple external sources in a structured and scalable manner.
+
+\begin{itemize}
+    \item \textbf{Sources of Data:}  
+    The system supports several channels:
+    \begin{itemize}
+        \item RSS feeds from public job boards.
+        \item REST APIs from professional platforms (e.g., LinkedIn, Indeed, Welcome to the Jungle).
+        \item Email inbox parsing for newsletters and subscriptions.
+    \end{itemize}
+    
+    \item \textbf{Automation Pipeline:}  
+    Workflows are executed through the \textbf{n8n} automation platform. Each workflow consists of nodes for fetching, transforming, and forwarding job data to the backend.
+    
+    \item \textbf{Data Standardization:}  
+    Collected job data is normalized into a unified JSON structure with standardized fields such as \texttt{title}, \texttt{company}, \texttt{location}, \texttt{skills}, \texttt{description}, and \texttt{source}.
+    
+    \item \textbf{Scheduling:}  
+    The ingestion process operates at configurable intervals (e.g., every 2 hours) or can be triggered manually by the user through the frontend.
+\end{itemize}
+
+\subsection{Offer Filtering Module}
+
+\noindent
+Once data is ingested, the filtering module compares each offer against the user’s criteria to identify relevant matches.
+
+\begin{itemize}
+    \item \textbf{Matching Algorithm:}  
+    A hybrid approach combining keyword search and semantic similarity (e.g., cosine similarity via sentence embeddings) determines the relevance of each offer.
+    
+    \item \textbf{Scoring System:}  
+    Each offer receives a numerical relevance score between 0 and 1. Only offers above a user-defined threshold (e.g., 0.7) are retained for summarization.
+    
+    \item \textbf{Duplicate Detection:}  
+    Hash-based identifiers prevent repeated storage of identical job listings from multiple sources.
+    
+    \item \textbf{Result Storage:}  
+    Filtered offers are saved in the MongoDB database and marked with their corresponding user ID, timestamp, and relevance score.
+\end{itemize}
+
+\subsection{AI Summarization Engine}
+
+\noindent
+The summarization engine leverages \textbf{OpenAI GPT-4} to generate concise and structured job summaries.
+
+\begin{itemize}
+    \item \textbf{Input Data:}  
+    The engine receives the normalized job description text and associated metadata from the filtering module.
+    
+    \item \textbf{Prompt Template:}  
+    A predefined template guides the model to produce summaries containing the following sections:  
+    \textit{Position Title, Company Overview, Key Responsibilities, Required Skills, and Application Insights.}
+    
+    \item \textbf{Output Format:}  
+    Summaries are returned as structured text blocks and stored alongside the original job offers in the database.
+    
+    \item \textbf{Quality Control:}  
+    The backend verifies that all expected fields are present before saving the result. In case of missing or malformed output, a re-generation is automatically triggered.
+\end{itemize}
+
+\subsection{AI Letter Draft Generation (Optional)}
+
+\noindent
+An optional functionality enables users to generate personalized cover letter drafts for selected job offers.
+
+\begin{itemize}
+    \item \textbf{Input Context:}  
+    The model combines three sources of information:  
+    (1) the summarized job offer,  
+    (2) the user’s stored profile data,  
+    (3) previously defined motivation style preferences.
+    
+    \item \textbf{Prompt Structure:}  
+    The AI is instructed to generate a professional and context-aware letter draft with three sections: introduction, motivation, and conclusion.
+    
+    \item \textbf{User Review:}  
+    Generated letters are displayed in the frontend editor, allowing the user to modify, approve, or export them in text or PDF format.
+\end{itemize}
+
+\subsection{Data Management Layer}
+
+\noindent
+All information produced by the system (job offers, summaries, and user data) is stored and managed within a secure cloud database.
+
+\begin{itemize}
+    \item \textbf{Database Engine:}  
+    The system uses \textbf{MongoDB Atlas}, chosen for its scalability, flexibility, and document-based structure that fits dynamic job data.
+    
+    \item \textbf{Data Schema:}  
+    Each document includes nested structures for offer metadata, AI-generated summaries, and associated user identifiers.
+    
+    \item \textbf{Backup and Retention:}  
+    Automatic backup policies ensure data persistence. Obsolete or expired job offers are archived to a secondary collection for future analysis.
+\end{itemize}
+
+\subsection{Notification and Alert System}
+
+\noindent
+To enhance user engagement, the system automatically informs users of new or relevant job opportunities.
+
+\begin{itemize}
+    \item \textbf{Notification Triggers:}  
+    Alerts are generated whenever a newly ingested job offer exceeds the user’s relevance threshold.
+    
+    \item \textbf{Delivery Channels:}  
+    Notifications are dispatched through email or third-party integrations such as Slack or Telegram via \textbf{n8n} connectors.
+    
+    \item \textbf{Content Format:}  
+    Each notification includes the job title, company name, and a short excerpt of the AI summary with a link to view full details on the dashboard.
+\end{itemize}
+
+\subsection{Frontend Visualization Dashboard}
+
+\noindent
+The user interface provides access to all system functionalities in an organized and interactive manner.
+
+\begin{itemize}
+    \item \textbf{Technology Stack:}  
+    Developed using \textbf{React} and \textbf{TypeScript}, ensuring responsiveness, modularity, and cross-platform accessibility.
+    
+    \item \textbf{Views and Components:}  
+    The dashboard consists of multiple pages: login, profile settings, job feed, AI summaries, and letter drafts.
+    
+    \item \textbf{Interaction Design:}  
+    Users can filter, search, and sort offers; review AI-generated content; and trigger workflow actions directly (e.g., “generate letter” or “refresh offers”).
+\end{itemize}
+
+\subsection{System Integration Workflow}
+
+\noindent
+This component ensures smooth interoperability between all subsystems: automation, backend, database, and frontend.
+
+\begin{itemize}
+    \item \textbf{Backend API:}  
+    Built with \textbf{FastAPI}, it exposes RESTful endpoints for data retrieval, filtering, and AI model invocation.
+    
+    \item \textbf{Authentication Flow:}  
+    Communication between frontend and backend is protected by JWT-based session tokens.
+    
+    \item \textbf{Automation Orchestration:}  
+    The \textbf{n8n} workflows continuously synchronize external data sources with the backend database, ensuring real-time updates.
+    
+    \item \textbf{Deployment Infrastructure:}  
+    Services are containerized using \textbf{Docker} and deployed across cloud providers (e.g., Vercel for frontend, Render for backend, MongoDB Atlas for data storage).
+\end{itemize}
+
+
+
+
+%---------- DEV ENV
+
+\section{Development Environment}
+
+
+\subsection{Choice of Software Development Platform}
+
+The \textbf{Evidi Job Response Assistant} is developed as a distributed, cloud-based web application integrating automation, AI, and workflow orchestration.  
+The project aims to streamline the job search process by automating the retrieval, filtering, and summarization of job offers using AI-driven methods.  
+Given the short project timeline (two months) and the need for a scalable, low-maintenance architecture, we carefully selected a modern and cloud-native technology stack.
+
+Our backend is developed using \textbf{FastAPI (Python 3.11)}, chosen for its asynchronous design and native compatibility with RESTful APIs. The database layer relies on \textbf{MongoDB Atlas}, a cloud-based NoSQL service optimized for unstructured text data such as job listings. The automation component leverages \textbf{n8n.cloud}, which provides a visual workflow platform to connect APIs and automate data ingestion. The frontend is built with \textbf{React 18} and \textbf{TypeScript}, ensuring maintainability and rapid UI prototyping from \textbf{Figma AI} designs. The system’s intelligence layer is powered by the \textbf{OpenAI GPT-4 API}, responsible for summarization and draft letter generation.
+
+For deployment, the backend is hosted on \textbf{Render}, the frontend on \textbf{Vercel}, and automation workflows on \textbf{n8n.cloud}, ensuring distributed yet coordinated operation.  
+This configuration provides a balance between scalability, modularity, and ease of collaboration among the four-member development team.
+
+\begin{table}[htpb]
+\caption{TABLE II: Tools and Language Choice}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{2.4cm}|m{5.2cm}|}
+\hline
+\textbf{Tools and Language} & \textbf{Reason} \\
+\hline
+FastAPI (Python 3.11) & FastAPI is a modern, high-performance web framework designed for building APIs with Python. It supports asynchronous I/O through ASGI, allowing concurrent processing of multiple requests—critical for handling AI summarization calls and workflow webhooks. Its native OpenAPI integration and Pydantic validation enhance security and documentation, while automatic type checking ensures robust development. \\
+\hline
+MongoDB Atlas & MongoDB Atlas is a fully managed NoSQL database ideal for storing dynamic and unstructured data. Its document-oriented model allows flexible schema design for job listings with varying fields. The cloud-hosted service offers high availability, free-tier scalability, and easy integration with Python backends, eliminating the need for local database maintenance. \\
+\hline
+n8n (Workflow Orchestration) & n8n provides a visual low-code automation platform that connects data pipelines across APIs, databases, and AI services. It automates RSS ingestion, filtering, and message forwarding to FastAPI, significantly reducing manual scripting. Its cloud-based deployment ensures reliability and transparency for non-technical stakeholders. \\
+\hline
+React + TypeScript & React offers a component-based architecture suitable for modular and responsive web interfaces. TypeScript adds static typing and compile-time checking, reducing bugs and improving maintainability. Together, they enable rapid frontend development aligned with modern design standards and seamless integration with backend APIs. \\
+\hline
+OpenAI GPT-4 API & GPT-4 provides advanced natural language understanding and summarization. It transforms long job descriptions into concise summaries and assists in generating personalized cover letter drafts. API-based integration simplifies scalability and experimentation with prompt engineering. \\
+\hline
+Render + Vercel + n8n.cloud & Render hosts the FastAPI backend with continuous deployment from GitHub. Vercel automates frontend builds and deployment for React. n8n.cloud hosts automation workflows without local setup, maintaining always-on task execution across the stack. \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\vspace{1 cm}
+
+\subsection{Cost Estimation}
+
+Ensuring the reliability and scalability of the \textbf{Evidi Job Response Assistant} requires cloud services that minimize operational overhead while providing sufficient performance.  
+We opted for free-tier and low-cost cloud options to maintain budget efficiency during the prototype phase while retaining professional-grade features.
+
+\textbf{Render} hosts the FastAPI backend under a free-tier plan that supports continuous integration (CI/CD) and SSL-secured endpoints. \textbf{Vercel} similarly provides free hosting for static React applications, ensuring seamless deployment from GitHub.  
+For workflow orchestration, \textbf{n8n.cloud} offers a community-tier plan that provides adequate execution capacity for RSS and email automation. \textbf{MongoDB Atlas}’s M0 cluster tier supports sufficient storage for several thousand job entries with automated backups.
+
+Overall operational costs remain minimal, with the only recurring expense being \textbf{OpenAI API usage}, estimated between 5–10 USD per month during testing, depending on the volume of summarization and draft generation requests.
+
+\begin{table}[htpb]
+\caption{TABLE III: Hosting and AI Tools}
+\begin{center}
+\begin{tabular}{|>{\centering\arraybackslash}m{2.4cm}|m{5.2cm}|}
+\hline
+\textbf{Tools and Language} & \textbf{Reason} \\
+\hline
+Render (Backend Hosting) & Render provides an accessible Platform-as-a-Service (PaaS) for deploying Python web apps directly from GitHub repositories. Its automatic builds, HTTPS support, and continuous deployment streamline backend updates with zero configuration cost. \\
+\hline
+Vercel (Frontend Hosting) & Vercel automates the deployment process for React applications and optimizes performance through global edge caching. Its integration with GitHub and focus on frontend projects make it ideal for CI/CD of the web interface. \\
+\hline
+n8n.cloud (Automation Hosting) & n8n.cloud manages workflows in a hosted environment without server setup. Its scalability and integration options ensure continuous operation of data ingestion and automation processes, critical for real-time job updates. \\
+\hline
+MongoDB Atlas (Database Hosting) & The M0 free cluster offers fully managed cloud storage, automated backups, and monitoring. It eliminates the need for local servers while ensuring reliable performance for the prototype. \\
+\hline
+OpenAI API (GPT-4) & While usage incurs minimal costs, the GPT-4 API offers unparalleled summarization quality, ensuring high-value AI outputs. Its pay-per-use model aligns well with project scalability and limited testing budgets. \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\subsection{Software in Use}
+
+\subsubsection{Existing Systems / Tools} 
+
+\textbf{\\Simplify (Simplify Copilot)} is a browser-based tool that automates repetitive job application tasks. It provides features such as auto-filling application fields, tracking applications, tailoring resumes, and identifying missing keywords in one’s CV. 
+While Simplify excels at streamlining the manual data entry portion of applications, it does not (publicly) provide a unified backend, cross-source ingestion pipeline, or AI summarization embedded in a web app.
+
+\textbf{LoopCV} is another job search automation platform that matches job seekers with listings and automates part of the application process. It uses AI to optimize CVs, track applications, and even directly apply on behalf of the user.   
+LoopCV’s strength lies in its end-to-end workflow (search → apply → track), but it is a closed, commercial product with limited transparency into its internal pipelines.
+
+\textbf{Huntr} offers features for job application tracking, AI-assisted resume and cover letter generation, and auto-filling application forms.   
+However, Huntr is primarily a productivity / tracking tool; it does not appear to automate ingestion from RSS or provide full workflow orchestration with external services like n8n.
+
+\textbf{LazyApply} automates job applications across job platforms via AI, handling form filling and submission. 
+Its value is in applying at scale, but challenges include handling custom fields, CAPTCHA, and job boards with complex forms.
+
+From the research perspective, \textbf{ResumeFlow: An LLM-facilitated Pipeline for Personalized Resume Generation and Refinement} introduces a pipeline that takes job descriptions and resumes and produces tailored, optimized CVs using LLMs. 
+This aligns with our AI-driven summary / draft generation module. It demonstrates the viability of leveraging LLMs for alignment between job descriptions and user profiles.
+
+\subsubsection{Comparison \& Gap Analysis}
+
+\begin{itemize}
+  \item \textbf{Scope of ingestion:} Existing tools like Simplify or LazyApply typically rely on browser extension or manual input, whereas our project plans to support ingestion via RSS feeds, APIs, and emails through automation workflows.
+  \item \textbf{AI summarization / drafting:} While tools offer resume optimization or cover letter suggestions, few expose summarization of full job descriptions or draft generation from user profile + job content. Our approach explicitly integrates that.
+  \item \textbf{Transparency and extensibility:} Commercial tools are black-box; you cannot inspect or customize their pipelines. We provide modular architecture (n8n + API backend) that is open, testable, and extensible.
+  \item \textbf{Integration \& orchestration:} Our system orchestrates ingestion, filtering, AI processing, and persistence together. Tools like Simplify partly automate, but lack seamless end-to-end pipeline control integrated with a web app interface.
+  \item \textbf{Flexibility \& deployment:} Because ours relies on open stack (FastAPI, MongoDB, n8n, React), we can adapt features, scale, modify workflows, or replace components, which is typically impossible with off-the-shelf tools.
+\end{itemize}
+
+% \subsection{Task Distribution}
+
+%---------- SPECS
+
+\section{Specifications}
+\subsection{Requirement 1 – User Management}
+
+\textbf{Goal:} Allow users to register, authenticate, and manage their profile and preferences.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Frontend:} Login and Register pages with full name, email, password, and confirmation fields. Settings page for profile update, password change, and notification preferences. Axios handles communication with backend.
+    \item \textbf{Backend:} FastAPI endpoints \texttt{/register}, \texttt{/login}, \texttt{/user/preferences}, \texttt{/user/profile}, and \texttt{/user/password}. JWT-based authentication and bcrypt password hashing.
+    \item \textbf{Database:} MongoDB collection \texttt{users} storing \texttt{\{ \_id, full\_name, email, password\_hash, preferences, settings \}}.
+    \item \textbf{Security:} JWT tokens for authentication, password validation, and session protection.
+\end{itemize}
+
+\textbf{Pseudocode:}
+% \begin{verbatim}
+% POST /register:
+%   receive {full_name, email, password}
+%   hash = bcrypt.hash(password)
+%   insert into db.users({full_name, email, hash})
+%   return success
+
+% POST /login:
+%   check email exists
+%   verify bcrypt(password, hash)
+%   return JWT_token
+% \end{verbatim}
+
+\begin{CodeBlock}
+POST /register:
+  receive {full_name, email, password}
+  hash = bcrypt.hash(password)
+  insert into db.users({full_name, email, hash})
+  return success
+
+POST /login:
+  check email exists
+  verify bcrypt(password, hash)
+  return JWT_token
+\end{CodeBlock}
+
+\subsection{Requirement 2 – Criteria \& Filter Management}
+
+\textbf{Goal:} Allow users to define, update, and store job search preferences.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Frontend:} Filters page with tech stack tags, experience level, include/exclude keywords, location preferences, and job type options.
+    \item \textbf{Backend:} FastAPI endpoints \texttt{/criteria/update} and \texttt{/criteria/get}.
+    \item \textbf{Database:} MongoDB collection \texttt{criteria} linked to user ID.
+    \item \textbf{Integration:} n8n workflows retrieve criteria for dynamic filtering.
+\end{itemize}
+
+\textbf{Pseudocode:\\}
+\begin{CodeBlock}
+POST /criteria/update:
+  user_id = JWT_token.user
+  update db.criteria where user_id
+  return success
+\end{CodeBlock}
+
+\subsection{Requirement 3 – Job Offer Ingestion}
+
+\textbf{Goal:} Retrieve and store job offers automatically from public and integrated sources.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Automation:} n8n workflows scheduled every 3 hours to fetch from RSS feeds, APIs, or email triggers.
+    \item \textbf{Backend:} FastAPI webhook \texttt{/webhook/jobs} receives job payloads and stores them in MongoDB.
+    \item \textbf{Frontend:} Sources page to add, edit, or remove sources with manual sync and status indicators.
+\end{itemize}
+
+\textbf{Pseudocode:\\}
+\begin{CodeBlock}
+RSS Trigger -> Filter (new posts only)
+-> HTTP POST to FastAPI /webhook/jobs
+-> Insert into db.jobs
+\end{CodeBlock}
+
+\subsection{Requirement 4 – Offer Filtering}
+
+\textbf{Goal:} Match job offers against user-defined criteria.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{n8n:} “IF” nodes filter job payloads based on keywords and location.
+    \item \textbf{Backend:} Python regex fallback for keyword matching.
+    \item \textbf{Frontend:} Jobs page filter dropdown (All, Matched, Applied, Rejected) with match badges.
+\end{itemize}
+
+\textbf{Pseudocode:\\}
+\begin{CodeBlock}
+for job in new_jobs:
+  if any(keyword in job.description for keyword in 
+  user.criteria):
+    insert into db.jobs_filtered
+\end{CodeBlock}
+
+\subsection{Requirement 5 – AI Summarization}
+
+\textbf{Goal:} Generate concise AI summaries for each job description.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{n8n:} HTTP request node calls OpenAI API (GPT-4/4o-mini).
+    \item \textbf{Backend:} FastAPI endpoint \texttt{/ai/summarize} for manual trigger.
+    \item \textbf{Frontend:} Job Detail Modal’s “AI Summary” tab shows results with regeneration option.
+    \item \textbf{Database:} MongoDB collection \texttt{summaries}.
+\end{itemize}
+
+\textbf{Pseudocode:\\}
+\begin{CodeBlock}
+POST /ai/summarize:
+  input = job.description
+  prompt = "Summarize in 5 bullet points"
+  response = openai.ChatCompletion(prompt)
+  db.summaries.insert({job_id, summary: response})
+\end{CodeBlock}
+
+\subsection{Requirement 6 – AI Letter Draft Generation}
+
+\textbf{Goal:} Automatically generate a motivation letter based on user’s CV and job description.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{n8n:} Uses OpenAI API with user profile and job data.
+    \item \textbf{Backend:} Endpoint \texttt{/ai/draft} for manual regeneration.
+    \item \textbf{Frontend:} “Cover Letter” tab in Job Detail Modal with edit, regenerate, copy, and download options.
+\end{itemize}
+
+\textbf{Prompt Example:\\}
+\begin{CodeBlock}
+"Write a short motivation paragraph for 
+this position based on user’s experience 
+and the job description."
+\end{CodeBlock}
+
+\subsection{Requirement 7 – CV Upload \& Analysis}
+
+\textbf{Goal:} Analyze uploaded CVs to extract skills and job preferences.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Frontend:} CV Analysis page with drag-and-drop upload, file card, and AI analysis results.
+    \item \textbf{Backend:} Endpoint \texttt{/cv/analyze} using OpenAI model for extraction.
+    \item \textbf{Database:} Stores extracted skills, experience level, and preferences in \texttt{cv\_analysis} collection.
+\end{itemize}
+
+\textbf{Workflow:\\}
+\begin{CodeBlock}
+Upload CV -> Analyze with AI -> Extract 
+Skills and Preferences -> Store in db.cv_analysis 
+-> Apply to Filters
+\end{CodeBlock}
+
+\subsection{Requirement 8 – Notification System}
+
+\textbf{Goal:} Notify users of new job matches via multiple channels.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{n8n:} Slack, Email, or Push notification nodes.
+    \item \textbf{Backend:} Endpoint \texttt{/api/notify} for message dispatching.
+    \item \textbf{Frontend:} Settings page toggles for email, push, and weekly digest.
+\end{itemize}
+
+\textbf{Message Example:\\}
+\begin{CodeBlock}
+"New job matching your skills: Data Engineer at 
+XCorp."
+\end{CodeBlock}
+
+\subsection{Requirement 9 – Dashboard \& Analytics}
+
+\textbf{Goal:} Display user’s job search metrics and activity overview.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Frontend:} Dashboard with stats cards (Total Jobs, Matched, Applied, Response Rate), recent activity feed, and quick actions.
+    \item \textbf{Backend:} Endpoint \texttt{/api/dashboard} aggregates metrics.
+    \item \textbf{Database:} Activity logs stored for history display.
+\end{itemize}
+
+\subsection{Requirement 10 – Frontend Dashboard and Navigation}
+
+\textbf{Goal:} Provide a modern, responsive interface for all application modules.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Framework:} React + TypeScript + Tailwind CSS.
+    \item \textbf{Global UI:} Header with logo, theme switcher, settings, logout.
+    \item \textbf{Navigation:} Tabs for Dashboard, Jobs, Sources, Filters, CV Analysis, and Settings.
+    \item \textbf{Theme Support:} Default, Dark, Deep Blue, and Green themes.
+\end{itemize}
+
+\subsection{Requirement 11 – Data Storage}
+
+\textbf{Goal:} Securely persist all user and job-related data.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Database:} MongoDB collections for users, criteria, jobs, summaries, letters, CV analyses, and notifications.
+    \item \textbf{Access Control:} JWT authentication required for all write operations.
+\end{itemize}
+
+\textbf{Schema:\\}
+\begin{CodeBlock}
+users: { _id, full_name, email, 
+password_hash, preferences, settings }
+criteria: { user_id, tech_stack[], 
+keywords_include[], keywords_exclude[], 
+location[], job_type[], experience_level[] }
+jobs: { job_id, title, company, description, 
+tags[], location, source, matched }
+summaries: { job_id, summary, ai_model, 
+updated_at }
+letters: { job_id, user_id, content, updated_at }
+cv_analysis: { user_id, extracted_skills[], 
+experience_level, preferences }
+notifications: { user_id, message, type, 
+timestamp, read }
+\end{CodeBlock}
+
+\subsection{Requirement 12 – Logging, Monitoring \& Error Handling}
+
+\textbf{Goal:} Enable observability and debugging across all services.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{FastAPI:} Middleware logs requests and responses.
+    \item \textbf{n8n:} Built-in execution and error logs.
+    \item \textbf{Cloud:} Render logs webhook failures and server errors.
+    \item \textbf{Frontend:} Toast notifications and retry logic for network errors.
+\end{itemize}
+
+\subsection{Requirement 13 – Testing and Validation}
+
+\textbf{Goal:} Ensure application stability through automated testing.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item \textbf{Backend:} Pytest for unit testing and Postman for integration tests.
+    \item \textbf{Frontend:} React Testing Library for component testing.
+    \item \textbf{Automation:} GitHub Actions CI pipeline for continuous testing.
+\end{itemize}
+
+\subsection{Requirement 14 – Integration Workflow}
+
+\textbf{Goal:} Maintain full interoperability among system components.
+
+\textbf{Architecture Overview:}
+\begin{itemize}
+    \item \textbf{n8n:} Manages ingestion, filtering, and AI summarization.
+    \item \textbf{FastAPI:} Handles authentication, validation, and persistence.
+    \item \textbf{MongoDB:} Centralized data storage.
+    \item \textbf{OpenAI API:} Provides summarization and letter generation.
+    \item \textbf{React Frontend:} Displays user-facing data and controls.
+\end{itemize}
+
+\textbf{Data Flow:\\}
+\begin{CodeBlock}
+[RSS / API / Email Source]
+        ↓
+    [n8n Workflow]
+        ↓
+ [AI Summarizer Node / Letter Draft Node]
+        ↓
+ [FastAPI Webhooks (/webhook/jobs, /ai/...)]
+        ↓
+       [MongoDB]
+        ↓
+ [React Frontend Dashboard & Pages]
+\end{CodeBlock}
+
+\subsection{Requirement 15 – UX Enhancements (Cross-Page Features)}
+
+\textbf{Goal:} Enhance user experience through modern interaction patterns.
+
+\textbf{Implementation:}
+\begin{itemize}
+    \item Toast notifications for success, error, and info messages.
+    \item Loading indicators, skeleton loaders, and progress feedback.
+    \item Responsive mobile design with touch-friendly inputs.
+    \item Keyboard accessibility for modals and navigation.
+    \item Smooth theme transitions and persistent preferences.
+\end{itemize}
+
+\end{document}
+
+
+
