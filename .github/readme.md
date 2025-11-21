@@ -98,3 +98,7 @@ job-response-assistant/
 ## Technology Overview
 
 The backend uses **FastAPI** for clean API design, authentication, and communication with n8n and the database. **MongoDB Atlas** provides a flexible schema suited for heterogeneous job listings and AI-generated content. **React + TypeScript** powers the frontend with a modular, responsive interface. **n8n** orchestrates ingestion, filtering, summarization, and notifications. AI processing relies on **OpenAI GPT-4/GPT-4o models**, enabling high-quality summarization, CV analysis, and letter generation.
+
+---
+
+Link to preview of the website: https://test-vercel-pi-five.vercel.app/
