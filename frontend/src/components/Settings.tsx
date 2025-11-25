@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -10,9 +10,18 @@ import { Alert, AlertDescription } from './ui/alert';
 import { User, Mail, Lock, Bell, Globe, Trash2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function SettingsPage() {
-  const [username, setUsername] = useState('John Doe');
-  const [email, setEmail] = useState('john.doe@example.com');
+const API_BASE = 'https://testfastapi-flax.vercel.app';
+
+interface SettingsPageProps {
+  userEmail: string | null;
+}
+
+export function SettingsPage({ userEmail }: SettingsPageProps) {
+  // Profile change
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+
+  // Password change
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,15 +37,65 @@ export function SettingsPage() {
   
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  useEffect(() => {
+  if (!userEmail) return;
+
+  const fetchProfile = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/users/${encodeURIComponent(userEmail)}`
+        );
+        if (!res.ok) {
+          console.error('Failed to fetch user profile');
+          return;
+        }
+        const data = await res.json();
+        setUsername(data.full_name || '');
+        setEmail(data.email || '');
+      } catch (err) {
+        console.error('Error fetching user profile', err);
+      }
+    };
+
+    fetchProfile();
+  }, [userEmail]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userEmail) {
+      toast.error('No user email available');
+      return;
+    }
+
     setIsSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+
+    try {
+      const res = await fetch(
+        `https://testfastapi-flax.vercel.app/api/users/${encodeURIComponent(userEmail)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            full_name: username,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        toast.error('Failed to update profile');
+        setIsSaving(false);
+        return;
+      }
+
       toast.success('Profile updated successfully');
-    }, 1000);
+    } catch (err) {
+      console.error(`Error updating profile: ${err}`);
+      toast.error(`Error updating profile: ${err}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
@@ -122,7 +181,7 @@ export function SettingsPage() {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Your name"
+                placeholder=""
               />
             </div>
             <div className="space-y-2">
@@ -132,7 +191,8 @@ export function SettingsPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
+                placeholder=""
+                disabled
               />
             </div>
             <Button type="submit" disabled={isSaving}>

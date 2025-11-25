@@ -155,3 +155,6 @@ n8n/.n8n/
 
 # VSCode settings
 .vscode/
+
+# Frontend node modules 
+frontend/node_modules/

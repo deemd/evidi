@@ -7,13 +7,16 @@ import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { X } from 'lucide-react';
 import { FilterCriteria } from '../types';
+import { toast } from 'sonner';
 
 interface FilterConfigurationProps {
   filters: FilterCriteria;
   onUpdateFilters: (filters: FilterCriteria) => void;
+  onSaveFilters: () => void;
+  isDirty: boolean;
 }
 
-export function FilterConfiguration({ filters, onUpdateFilters }: FilterConfigurationProps) {
+export function FilterConfiguration({ filters, onUpdateFilters, onSaveFilters, isDirty }: FilterConfigurationProps) {
   const [newStackItem, setNewStackItem] = useState('');
   const [newKeyword, setNewKeyword] = useState('');
   const [newExcludeKeyword, setNewExcludeKeyword] = useState('');
@@ -53,9 +56,18 @@ export function FilterConfiguration({ filters, onUpdateFilters }: FilterConfigur
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className='text-primary text-2xl font-bold'>Filter Configuration</h2>
-        <p className="">Define criteria to automatically filter job offers</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-primary text-2xl font-bold">Filter Configuration</h2>
+          <p>Define criteria to automatically filter job offers</p>
+        </div>
+        <Button
+          onClick={onSaveFilters}
+          disabled={!isDirty}               // 👈 disable when no changes
+          variant={isDirty ? "default" : "outline"}  // optional: visual feedback
+        >
+          Save
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

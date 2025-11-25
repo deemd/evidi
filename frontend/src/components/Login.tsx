@@ -8,9 +8,12 @@ import { Briefcase } from 'lucide-react';
 interface LoginProps {
   onLogin: (email: string, password: string) => void;   // you can change this later to (user: any)
   onSwitchToRegister: () => void;
+  successMessage?: string | null;
 }
 
-export function Login({ onLogin, onSwitchToRegister }: LoginProps) {
+const API_BASE = 'https://testfastapi-flax.vercel.app';
+
+export function Login({ onLogin, onSwitchToRegister, successMessage }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -22,13 +25,16 @@ export function Login({ onLogin, onSwitchToRegister }: LoginProps) {
     setError(null);
 
     try {
-      const res = await fetch('http://localhost:8000/login', {
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         // if you later use cookies/JWT in HttpOnly cookie, add: credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: email,
+          pwd: password,
+        }),
       });
 
       if (!res.ok) {
@@ -89,6 +95,12 @@ export function Login({ onLogin, onSwitchToRegister }: LoginProps) {
                 required
               />
             </div>
+
+            {successMessage === "account_created" && (
+              <p className="text-sm text-green-600 mb-2 text-center">
+                Account successfully created! You can now log in.
+              </p>
+            )}
 
             {error && (
               <p className="text-sm text-red-500">
