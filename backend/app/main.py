@@ -1,71 +1,71 @@
-"""
-backend/app/main.py
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-FastAPI entrypoint for the Job Response Assistant backend.
-
-Provides:
-- GET /            -> simple health check / hello endpoint
-- GET /test-mongo  -> read all test documents from test_collection
-- POST /test-mongo -> insert a test document
-- POST /webhook/n8n -> minimal endpoint for n8n job payloads
-"""
-
-from datetime import datetime
-from typing import Any
-
-from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
-
-from app.db import database
-
-app = FastAPI(title="Job Response Backend")
+from app.core.config import settings
+from app.db.database import mongodb
+from app.api.api_v1.router import api_router
 
 
-class InsertItem(BaseModel):
-    """Schema for inserting a test document."""
-
-    name: str
-
-
-@app.get("/")
-def read_root() -> dict[str, str]:
-    """Return a simple health check message."""
-    return {"message": "Hello World!", "service": "job-response-backend"}
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan events."""
+    # Startup
+    mongodb.connect()
+    yield
+    # Shutdown
+    mongodb.close()
 
 
-@app.get("/test-mongo")
-def get_test_items() -> dict[str, Any]:
-    """Return all documents from the test_collection."""
-    try:
-        coll = database.test_collection()
-        docs = list(coll.find({}, {"_id": 0}))
-        return {"items": docs}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+# Initialize FastAPI app
+app = FastAPI(
+    title=settings.APP_TITLE,
+    description=settings.APP_DESCRIPTION,
+    version=settings.APP_VERSION,
+    lifespan=lifespan # à vérifier
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include API routes
+app.include_router(api_router, prefix="/api")
 
 
-@app.post("/test-mongo")
-def add_test_item(item: InsertItem) -> dict[str, Any]:
-    """Insert a document into test_collection."""
-    try:
-        coll = database.test_collection()
-        payload = {"name": item.name, "created_at": datetime.utcnow()}
-        result = coll.insert_one(payload)
-        return {"inserted_id": str(result.inserted_id)}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-@app.post("/webhook/n8n")
-async def n8n_webhook(request: Request) -> dict[str, Any]:
+@app.get("/", response_class=HTMLResponse)
+def read_root():
+    """Root endpoint with API information."""
+    return """
+    <html>
+        <head>
+            <title>Evidi API</title>
+        </head>
+        <body>
+            <h1>Welcome to Evidi API</h1>
+            <p>Use the <a href="/docs">/docs</a> endpoint to explore the API documentation.</p>
+        </body>
+    </html>
     """
-    Receive job data from n8n via POST and store it in MongoDB.
-    """
-    payload = await request.json()
-    try:
-        ingested = database.get_db()["ingested_jobs"]
-        payload["_received_at"] = datetime.utcnow()
-        result = ingested.insert_one(payload)
-        return {"status": "ok", "inserted_id": str(result.inserted_id)}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy"}
+
+
+# Vercel handler
+handler = app
+
+
+# Local development server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=5001, reload=True)
