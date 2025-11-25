@@ -17,7 +17,7 @@ import { useTheme } from "./components/UseTheme";
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Toaster } from './components/ui/sonner';
-import { Briefcase, Settings, FileText, Database, List, LogOut } from 'lucide-react';
+import { Briefcase, Settings, FileText, Database, List, LogOut, X } from 'lucide-react';
 
 // Types
 import { FilterCriteria, JobOffer, JobSource } from './types';
@@ -54,6 +54,7 @@ export default function App() {
   const [isFiltersDirty, setIsFiltersDirty] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobOffer | null>(null);
   const [isJobDetailOpen, setIsJobDetailOpen] = useState(false);
+  const [isCvModalOpen, setIsCvModalOpen] = useState(false);
 
   // ------------------------------------------------------
   // FETCH USER DATA (jobs, sources, filters, user profile)
@@ -61,28 +62,18 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated || !userEmail) return;
 
-    const loadAll = async () => {
+    const loadProfile = async () => {
       try {
-        const [jobsRes, sourcesRes, filtersRes, userRes] = await Promise.all([
-          fetch(`${API_BASE}/api/job-offers`),
-          fetch(`${API_BASE}/api/job-sources`),
-          fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}/filters`),
-          fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}`)
-        ]);
-
-        if (jobsRes.ok) setJobs(await jobsRes.json());
-        if (sourcesRes.ok) setSources(await sourcesRes.json());
-
-        if (filtersRes.ok) {
-          const f = await filtersRes.json();
-          setFilters(f.filters);
-        }
+        const userRes = await fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}`);
 
         if (userRes.ok) {
           const user: UserProfile = await userRes.json();
+          
+          setFilters(user.filters);
+
           if (!user.resume) {
             setResumeRequired(true);
-            setActiveTab('cv');
+            setIsCvModalOpen(true);
           }
         }
       } catch (e) {
@@ -90,7 +81,23 @@ export default function App() {
       }
     };
 
-    loadAll();
+    const loadRest = async () => {
+      try {
+        const [jobsRes, sourcesRes] = await Promise.all([
+          fetch(`${API_BASE}/api/job-offers`),
+          fetch(`${API_BASE}/api/job-sources`)
+        ]);
+        
+        if (jobsRes.ok) setJobs(await jobsRes.json());
+        
+        if (sourcesRes.ok) setSources(await sourcesRes.json());
+      } catch (e) {
+        console.error("Error loading jobs or sources:", e);
+      }
+    }
+
+    loadProfile();
+    loadRest();
   }, [isAuthenticated, userEmail]);
 
   // Scroll reset on tab switch
@@ -137,10 +144,17 @@ export default function App() {
         `${API_BASE}/api/users/${encodeURIComponent(userEmail)}/resume`,
         { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resume: cvText }) }
       );
-      if (res.ok) setResumeRequired(false);
+      if (res.ok) {
+        setResumeRequired(false);
+        setIsCvModalOpen(false);
+      }
     } catch (e) {
       console.error("Error saving resume:", e);
     }
+  };
+  const handleResumeSubmitted = () => {
+    setResumeRequired(false);
+    setIsCvModalOpen(false);
   };
 
   // ------------------------------------------------------
@@ -204,7 +218,11 @@ export default function App() {
   };
 
   const handleTabChange = (value: string) => {
-    if (resumeRequired && value !== 'cv' && value !== 'settings') return;
+    if (resumeRequired && value !== 'settings') {
+      // keep user focused on adding resume
+      setIsCvModalOpen(true);
+      return;
+    }
     setActiveTab(value);
   };
 
@@ -274,7 +292,7 @@ export default function App() {
 
             {/* Right */}
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setActiveTab('cv')}>
+              <Button variant="outline" size="sm" onClick={() => setIsCvModalOpen(true)}>
                 <FileText className="h-4 w-4 mr-2" /> My Resume
               </Button>
 
@@ -295,7 +313,7 @@ export default function App() {
         </header>
 
         {/* CONTENT */}
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-4 py-8 relative">
           <TabsContent value="dashboard">
             <Dashboard
               totalJobs={jobs.length}
@@ -328,17 +346,63 @@ export default function App() {
             />
           </TabsContent>
 
-          <TabsContent value="cv">
+          {/* <TabsContent value="cv">
             <CVUpload
               onExtractFilters={handleExtractFilters}
               onSaveResume={handleSaveResume}
               resumeRequired={resumeRequired}
             />
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="settings">
             <SettingsPage userEmail={userEmail} />
           </TabsContent>
+
+          {isCvModalOpen && (
+            <div className="absolute inset-0 z-40 flex items-start justify-center">
+              {/* Blurred background over the current tab area */}
+              <div
+                className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                onClick={() => {
+                  if (!resumeRequired) {
+                    setIsCvModalOpen(false);
+                  }
+                }}
+              />
+
+              {/* Centered popup */}
+              <div className="relative z-50 w-full max-w-2xl my-4">
+                <div className="bg-card-background rounded-xl shadow-lg border">
+                  <div className="flex items-center justify-between px-6 py-4 border-b">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      <h2 className="text-lg font-semibold">My Resume</h2>
+                    </div>
+
+                    {!resumeRequired && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setIsCvModalOpen(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="p-4">
+                    <CVUpload
+                      userEmail={userEmail!}
+                      onExtractFilters={handleExtractFilters}
+                      onSaveResume={handleSaveResume}
+                      resumeRequired={resumeRequired}
+                      onResumeSubmitted={handleResumeSubmitted}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         <JobDetail
