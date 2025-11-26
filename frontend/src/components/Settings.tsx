@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { User, Mail, Lock, Bell, Globe, Trash2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const API_BASE = 'https://evidi-backend.vercel.app';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
 
 interface SettingsPageProps {
   userEmail: string | null;

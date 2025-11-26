@@ -14,7 +14,7 @@ interface CVUploadProps {
   onResumeSubmitted?: () => void;
 }
 
-const API_BASE = 'https://evidi-backend.vercel.app';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
 
 export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequired, onResumeSubmitted}: CVUploadProps) {
   const [cvText, setCvText] = useState('');
