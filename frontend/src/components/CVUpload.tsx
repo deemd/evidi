@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Upload, FileText, Sparkles } from 'lucide-react';
 import { FilterCriteria } from '../types';
+import { toast } from 'sonner';
 
 interface CVUploadProps {
   userEmail: string;
@@ -14,7 +15,7 @@ interface CVUploadProps {
   onResumeSubmitted?: () => void;
 }
 
-const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
+const API_BASE = 'https://evidi-backend.vercel.app';
 
 export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequired, onResumeSubmitted}: CVUploadProps) {
   const [cvText, setCvText] = useState('');
@@ -25,16 +26,40 @@ export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequ
     experience: string;
     locations: string[];
   } | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !userEmail) return;
+
+    // Just store the file and show the success message.
+    setSelectedFile(file);
+    setUploadSuccess(true);
+
+    // Optional: if you want to reflect the name in the textarea
+    setCvText(file.name + " | email: " + userEmail);
+  };
+
+
+  const handleExtractFromCV = async () => {
+    // Need either a selected file or some text, and an email
+    if (!selectedFile) {
+      toast.error('No file selected');
+      return;
+    }
+
+    if (!userEmail) {
+      toast.error('No user email provided');
+      return;
+    }
 
     setIsProcessing(true);
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', selectedFile as File);
+      
 
       const res = await fetch(
         `${API_BASE}/api/users/${encodeURIComponent(userEmail)}/resume/upload-analyze`,
@@ -46,54 +71,32 @@ export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequ
 
       if (!res.ok) {
         console.error('Failed to analyze resume', await res.text());
+        toast.error('Failed to analyze resume');
+        setIsProcessing(false);
         return;
       }
 
+      // Backend returns: { filters: FilterCriteria; resume: string | null }
       const data = await res.json();
-      // data: { filters: FilterCriteria; resume: string | null }
-
       const filters = data.filters ?? {};
+
       onExtractFilters(filters);
 
-      const extracted = {
-        skills: data.skills || [],
-        experience: data.experience || '',
-        locations: data.locations || [],
-      };
-      setExtractedData(extracted);
+      setExtractedData({
+        skills: filters.stack ?? [],
+        experience: (filters.experience && filters.experience[0]) || '',
+        locations: filters.location ?? [],
+      });
 
-      // Notify parent that resume is handled so it can close modal
       onResumeSubmitted?.();
-
-      // Just to show something in the textarea
-      setCvText(`File uploaded: ${file.name}`);
     } catch (err) {
-      console.error('Error uploading/analyzing resume:', err);
+      console.error('Error analyzing resume from pasted text:', err);
+      // toast.error('Error analyzing resume');
     } finally {
       setIsProcessing(false);
     }
   };
 
-
-  const handleExtractFromCV = () => {
-    setIsProcessing(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
-      // Mock extraction - in real app, this would use AI to parse the CV
-      const mockExtracted = {
-        skills: [
-          'React', 'TypeScript', 'Node.js', 'Next.js', 
-          'PostgreSQL', 'AWS', 'Docker', 'Git'
-        ],
-        experience: 'Senior',
-        locations: ['Remote', 'San Francisco', 'New York'],
-      };
-      
-      setExtractedData(mockExtracted);
-      setIsProcessing(false);
-    }, 2000);
-  };
 
   const handleApplyFilters = () => {
     if (extractedData) {
@@ -153,25 +156,31 @@ export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequ
               </div>
               <div className="relative flex justify-center">
                 <span className="bg-card-background px-2 text-primary">
-                  or paste text
+                  vvv uploaded file below vvv
                 </span>
               </div>
             </div>
 
             <Textarea
               placeholder="Paste your CV content here..."
-              className="min-h-[115px]"
+              className="min-h-[30px]"
               value={cvText}
               onChange={(e) => setCvText(e.target.value)}
+              disabled
             />
+
+            {uploadSuccess && (
+              <p className="text-green-600 text-sm font-medium">
+                Resume successfully uploaded!
+              </p>
+            )}
 
             <Button
               className="w-full"
               onClick={() => {
                 handleExtractFromCV();
-                handleSaveCV();
               }}
-              disabled={!cvText || isProcessing}
+              disabled={!selectedFile || isProcessing}
             >
               {isProcessing ? (
                 <>
