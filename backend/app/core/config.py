@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     
     # MongoDB Configuration
-    MONGO_URI: str = os.getenv("MONGO_URI)")
+    MONGO_URI: str = os.getenv("MONGO_URI")
     DB_NAME: str = "evidi-prod"
     USERS_COLLECTION_NAME: str = "users"
     JOB_OFFERS_COLLECTION_NAME: str = "job_offers"
