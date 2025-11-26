@@ -33,7 +33,7 @@ job_offers_collection = db[JOB_OFFERS_COLLECTION_NAME]
 job_sources_collection = db[JOB_SOURCES_COLLECTION_NAME]
 
 # N8N Webhook URL
-N8N_WEBHOOK_URL = 'https://primary-production-3c5b.up.railway.app/webhook-test/2b5039b5-64a4-4caa-afc7-579bf1f6e1a5' # os.getenv("N8N_WEBHOOK_URL")
+N8N_WEBHOOK_URL = 'https://webhook-processor-production-3263.up.railway.app/webhook/2b5039b5-64a4-4caa-afc7-579bf1f6e1a5' # os.getenv("N8N_WEBHOOK_URL")
 
 # FastAPI init
 app = FastAPI(
