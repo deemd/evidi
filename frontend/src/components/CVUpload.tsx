@@ -14,7 +14,7 @@ interface CVUploadProps {
   onResumeSubmitted?: () => void;
 }
 
-const API_BASE = 'https://testfastapi-flax.vercel.app';
+const API_BASE = 'https://evidi-backend.vercel.app';
 
 export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequired, onResumeSubmitted}: CVUploadProps) {
   const [cvText, setCvText] = useState('');
