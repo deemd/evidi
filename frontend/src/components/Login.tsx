@@ -11,7 +11,7 @@ interface LoginProps {
   successMessage?: string | null;
 }
 
-const API_BASE = 'https://testfastapi-flax.vercel.app';
+const API_BASE = 'https://evidi-backend.vercel.app';
 
 export function Login({ onLogin, onSwitchToRegister, successMessage }: LoginProps) {
   const [email, setEmail] = useState('');
