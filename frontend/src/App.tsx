@@ -23,7 +23,7 @@ import { Briefcase, Settings, FileText, Database, List, LogOut, X } from 'lucide
 import { FilterCriteria, JobOffer, JobSource } from './types';
 import { toast } from 'sonner';
 
-const API_BASE = 'https://evidi-backend.vercel.app';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
 
 interface UserProfile {
   id: string;

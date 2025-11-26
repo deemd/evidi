@@ -10,7 +10,7 @@ interface RegisterProps {
   onSwitchToLogin: (status?: string) => void;
 }
 
-const API_BASE = 'https://evidi-backend.vercel.app';
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
 
 export function Register({ onRegister, onSwitchToLogin }: RegisterProps) {
   const [name, setName] = useState('');
