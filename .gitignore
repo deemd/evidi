@@ -137,3 +137,24 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local virtual environments
+venv/
+*/venv/
+
+# OS files
+.DS_Store
+
+# n8n local data
+n8n_data/
+n8n/.n8n/
+
+# VSCode settings
+.vscode/
+
+# Frontend node modules 
+frontend/node_modules/

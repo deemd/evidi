@@ -5,51 +5,98 @@ import { Textarea } from './ui/textarea';
 import { Badge } from './ui/badge';
 import { Upload, FileText, Sparkles } from 'lucide-react';
 import { FilterCriteria } from '../types';
+import { toast } from 'sonner';
 
 interface CVUploadProps {
+  userEmail: string;
   onExtractFilters: (filters: Partial<FilterCriteria>) => void;
+  onSaveResume?: (cvText: string) => void;
+  resumeRequired?: boolean;
+  onResumeSubmitted?: () => void;
 }
 
-export function CVUpload({ onExtractFilters }: CVUploadProps) {
+const API_BASE = 'https://evidi-backend.vercel.app';
+
+export function CVUpload({ userEmail, onExtractFilters, onSaveResume, resumeRequired, onResumeSubmitted}: CVUploadProps) {
   const [cvText, setCvText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [extractedData, setExtractedData] = useState<{
     skills: string[];
     experience: string;
     locations: string[];
   } | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = event.target?.result as string;
-        setCvText(text);
-      };
-      reader.readAsText(file);
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userEmail) return;
+
+    // Just store the file and show the success message.
+    setSelectedFile(file);
+    setUploadSuccess(true);
+
+    // Optional: if you want to reflect the name in the textarea
+    setCvText(file.name + " | email: " + userEmail);
+  };
+
+
+  const handleExtractFromCV = async () => {
+    // Need either a selected file or some text, and an email
+    if (!selectedFile) {
+      toast.error('No file selected');
+      return;
+    }
+
+    if (!userEmail) {
+      toast.error('No user email provided');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile as File);
+      
+
+      const res = await fetch(
+        `${API_BASE}/api/users/${encodeURIComponent(userEmail)}/resume/upload-analyze`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        console.error('Failed to analyze resume', await res.text());
+        toast.error('Failed to analyze resume');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Backend returns: { filters: FilterCriteria; resume: string | null }
+      const data = await res.json();
+      const filters = data.filters ?? {};
+
+      onExtractFilters(filters);
+
+      setExtractedData({
+        skills: filters.stack ?? [],
+        experience: (filters.experience && filters.experience[0]) || '',
+        locations: filters.location ?? [],
+      });
+
+      onResumeSubmitted?.();
+    } catch (err) {
+      console.error('Error analyzing resume from pasted text:', err);
+      // toast.error('Error analyzing resume');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handleExtractFromCV = () => {
-    setIsProcessing(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
-      // Mock extraction - in real app, this would use AI to parse the CV
-      const mockExtracted = {
-        skills: [
-          'React', 'TypeScript', 'Node.js', 'Next.js', 
-          'PostgreSQL', 'AWS', 'Docker', 'Git'
-        ],
-        experience: 'Senior',
-        locations: ['Remote', 'San Francisco', 'New York'],
-      };
-      
-      setExtractedData(mockExtracted);
-      setIsProcessing(false);
-    }, 2000);
-  };
 
   const handleApplyFilters = () => {
     if (extractedData) {
@@ -61,21 +108,25 @@ export function CVUpload({ onExtractFilters }: CVUploadProps) {
     }
   };
 
+  const handleSaveCV = async () => {
+    if (!onSaveResume || !cvText) return;
+
+    try {
+      setIsSaving(true);
+      await onSaveResume(cvText);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className='text-primary text-2xl font-bold'>CV Analysis</h2>
-        <p className="">
-          Upload your CV to automatically extract filter criteria
-        </p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1">
         <Card>
           <CardHeader>
-            <CardTitle className='text-primary font-semibold'>Upload CV</CardTitle>
+            <CardTitle className='text-primary font-semibold'>Upload Resume</CardTitle>
             <CardDescription>
-              Upload your CV or paste its content below
+              Upload your resume or paste its content below
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -84,7 +135,7 @@ export function CVUpload({ onExtractFilters }: CVUploadProps) {
                 type="file"
                 id="cv-upload"
                 className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf"
                 onChange={handleFileUpload}
               />
               <label
@@ -93,10 +144,8 @@ export function CVUpload({ onExtractFilters }: CVUploadProps) {
               >
                 <Upload className="h-10 w-10 text-primary" />
                 <div>
-                  <p>Click to upload or drag and drop</p>
-                  <p className="text-primary">
-                    PDF, DOC, DOCX, or TXT
-                  </p>
+                  <p>Click to upload or drag and drop your</p>
+                  <p>resume in .pdf format</p>
                 </div>
               </label>
             </div>
@@ -107,22 +156,31 @@ export function CVUpload({ onExtractFilters }: CVUploadProps) {
               </div>
               <div className="relative flex justify-center">
                 <span className="bg-card-background px-2 text-primary">
-                  or paste text
+                  vvv uploaded file below vvv
                 </span>
               </div>
             </div>
 
             <Textarea
               placeholder="Paste your CV content here..."
-              className="min-h-[200px]"
+              className="min-h-[30px]"
               value={cvText}
               onChange={(e) => setCvText(e.target.value)}
+              disabled
             />
+
+            {uploadSuccess && (
+              <p className="text-green-600 text-sm font-medium">
+                Resume successfully uploaded!
+              </p>
+            )}
 
             <Button
               className="w-full"
-              onClick={handleExtractFromCV}
-              disabled={!cvText || isProcessing}
+              onClick={() => {
+                handleExtractFromCV();
+              }}
+              disabled={!selectedFile || isProcessing}
             >
               {isProcessing ? (
                 <>
@@ -132,63 +190,10 @@ export function CVUpload({ onExtractFilters }: CVUploadProps) {
               ) : (
                 <>
                   <FileText className="mr-2 h-4 w-4" />
-                  Extract Filters from CV
+                  Save Resume & Extract Filters
                 </>
               )}
             </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className='text-primary font-semibold'>Extracted Data</CardTitle>
-            <CardDescription>
-              AI-powered analysis of your CV
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!extractedData ? (
-              <div className="flex flex-col items-center justify-center h-[400px] text-center">
-                <Sparkles className="h-12 w-12 text-primary mb-4" />
-                <p className="text-primary">
-                  Upload or paste your CV and click "Extract Filters" to see
-                  AI-analyzed results
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="mb-3">Skills Detected</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {extractedData.skills.map((skill, i) => (
-                      <Badge key={i} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="mb-3">Experience Level</h3>
-                  <Badge>{extractedData.experience}</Badge>
-                </div>
-
-                <div>
-                  <h3 className="mb-3">Preferred Locations</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {extractedData.locations.map((loc, i) => (
-                      <Badge key={i} variant="outline">
-                        {loc}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <Button className="w-full" onClick={handleApplyFilters}>
-                  Apply Filters to Configuration
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
