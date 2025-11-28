@@ -1,14 +1,6 @@
-# app/main.py
-
-import os
-import dotenv
-
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-
-# Load environment variables from .env file
-dotenv.load_dotenv()
 
 # Import routers
 from app.routers import users, jobs
@@ -55,7 +47,7 @@ def read_root():
     """
 
 
-# UVICORN (optional, if you like running `python -m app.main`)
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=5001, reload=True)
+# # UVICORN (optional, if you like running `python -m app.main`)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("app.main:app", host="0.0.0.0", port=5001, reload=True)
