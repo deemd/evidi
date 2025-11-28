@@ -20,7 +20,7 @@ All interactions take place through a focused dashboard where users manage job f
 ## 🧱 System Architecture
 
 ### Abstract System Architecture Diagram
-![Evidi Abstract System Architecture](docs/evidi-architecture-complete.svg)
+![Evidi Abstract System Architecture](docs/evidi-abstract-architecture.png)
 
 ### Detailed System Architecture Diagram
 ![Evidi Detailed System Architecture](docs/evidi-detailed-architecture.svg)
