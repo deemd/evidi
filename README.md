@@ -74,4 +74,4 @@ The backend uses **FastAPI** for clean API design, authentication, and communica
 
 ---
 
-Link to preview of the website: https://test-vercel-pi-five.vercel.app/
+Link to preview of the website: https://evidi-frontend.vercel.app/
