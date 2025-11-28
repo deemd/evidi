@@ -26,36 +26,43 @@ All interactions take place through a focused dashboard where users manage job f
 ## 📁 Repository Structure
 
 ```
-job-response-assistant/
+evidi/
 │
-├── backend/                           # FastAPI application
+├── backend/                                   # FastAPI application
+│   ├── public/
 │   ├── app/
-│   │   ├── main.py                    # Entry point
-│   │   ├── api/                       # Routes: auth, jobs, ai, criteria...
-│   │   ├── core/                      # Config, security, JWT, hashing
-│   │   └── db/                        # MongoDB client & collections
+│   │   ├── main.py                            # Entry point for FastAPI
+│   │   ├── api/                               # Routes: auth, jobs, ai, criteria...
+│   │   ├── core/                              # Config, security, JWT, hashing
+│   │   ├── db/                                # MongoDB client & collections
+│   │   └── models/                            # Data models
 │   ├── tests/
+│   ├── main.py                                # Entry point for Vercel
 │   ├── .env.example
 │   └── requirements.txt
 │
-├── frontend/                          # React + TypeScript web interface
+├── frontend/                                  # React + TypeScript web interface
 │   ├── public/
 │   ├── src/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── .env.example
 │
-├── n8n/                               # Workflow automation layer
-│   ├── workflows/                     # JSON exports of automation workflows
+├── n8n/                                       # Workflow automation layer
+│   ├── workflows/                             # JSON exports of automation workflows
+│   │   ├── cv_analysis_pipeline.json
+│   │   ├── job_scraping_and_matching.json
+│   │   └── cover_letter_generator.json
 │   ├── docs/
-│   │   └── workflow_diagram.png       # Architecture diagram
-│   └── README.md                      # Explanation of workflow logic
+│   │   └── workflow_diagram.png               # Architecture diagram
+│   └── README.md                              # Explanation of workflow logic
 │
-├── docs/                              # Technical documentation (LaTeX, specs, diagrams)
+├── docs/                                      # Technical documentation (LaTeX, specs, diagrams)
 │
 ├── .github/
 │   └── ISSUE_TEMPLATE.md
 │
+├── CONTRIBUTING.md
 └── README.md
 ```
 
