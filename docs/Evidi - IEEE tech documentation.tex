@@ -11,6 +11,8 @@
 \usepackage{booktabs}
 \usepackage{float}
 \usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{svg}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
@@ -714,7 +716,157 @@ timestamp, read }
     \item Smooth theme transitions and persistent preferences.
 \end{itemize}
 
-\section{Architecture Design  \& Implementation}
+\section{Architecture Design \& Implementation}
+
+This section presents the architectural structure of the Evidi system, with a focus on its modular decomposition and implementation strategy. Each module is described in detail, including its purpose, responsibilities, internal components, and reasons for selection. Visual representations are omitted for simplicity but can be added as figures if needed.
+
+\subsection{Global Technical Architecture}
+
+\graphicspath{{./}}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{evidi-complete-architecture.png}
+    \caption{Global architecture}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Module 1 — Backend API (FastAPI)}
+
+\subsubsection*{Purpose}
+The Backend API is responsible for managing all server-side logic, data persistence, user authentication, and communication between the frontend, the database, and the AI workflow engine (n8n). It acts as the central orchestrator of the Evidi architecture.
+
+\subsubsection*{Functionality}
+\begin{itemize}
+    \item Provides RESTful endpoints for job offers, user criteria, summaries, and authentication.
+    \item Validates and processes all data received from the frontend.
+    \item Interacts with MongoDB Atlas to store and retrieve structured job and user data.
+    \item Receives data from n8n workflows (job ingestion, summarization, AI matching).
+    \item Ensures secure JWT-based authentication to safeguard user sessions.
+\end{itemize}
+
+\subsubsection*{Location of Source Code}
+\begin{itemize}
+    \item Stored in the \texttt{/backend/} directory of the project repository.
+    \item Deployed automatically through Vercel's serverless backend environment.
+\end{itemize}
+
+\subsubsection*{Class and Component Structure}
+\begin{itemize}
+    \item \textbf{main.py} — Initializes the FastAPI application and registers all routers.
+    \item \textbf{routers/auth.py} — Handles login, registration, and password recovery.
+    \item \textbf{routers/jobs.py} — Exposes CRUD operations for job offers.
+    \item \textbf{routers/criteria.py} — Manages user-defined filtering rules.
+    \item \textbf{database/mongo.py} — Defines the MongoDB connection client.
+    \item \textbf{models/\*.py} — Defines Pydantic models for validation and consistency.
+\end{itemize}
+
+\subsubsection*{Origin and Rationale}
+FastAPI was chosen because:
+\begin{itemize}
+    \item It offers high performance through asynchronous execution.
+    \item It integrates seamlessly with Pydantic for type-safe data models.
+    \item Its auto-generated Swagger/OpenAPI documentation accelerates development.
+    \item It fits well with serverless deployment on Vercel.
+\end{itemize}
+
+\subsubsection*{Graphical Representation (Description)}
+\begin{itemize}
+    \item The module sits at the center of the system architecture.
+    \item Communicates upstream with the frontend, downstream with MongoDB, and laterally with n8n.
+\end{itemize}
+
+
+\subsection{Module 2 — Automation Workflows (n8n)}
+
+\subsubsection*{Purpose}
+This module automates the ingestion, transformation, filtering, and AI-based enrichment of job offers. It serves as the intelligence pipeline that feeds the backend with structured and enriched job information.
+
+\subsubsection*{Functionality}
+\begin{itemize}
+    \item Fetches job offers from external sources (RSS, APIs, email inbox).
+    \item Normalizes raw job data into a common JSON structure.
+    \item Extracts job requirements and skills using AI prompts.
+    \item Sends summarized job descriptions and match scores to the backend API.
+    \item Schedules repeated workflows (e.g., every 2 hours).
+\end{itemize}
+
+\subsubsection*{Location of Workflow Files}
+\begin{itemize}
+    \item Stored and executed directly within the n8n cloud workspace.
+    \item Exportable as JSON files to the project repository under \texttt{/workflows/}.
+\end{itemize}
+
+\subsubsection*{Component Breakdown}
+\begin{itemize}
+    \item \textbf{HTTP Request Nodes} — Retrieve job postings from external APIs.
+    \item \textbf{RSS Nodes} — Subscribe to job boards and periodic updates.
+    \item \textbf{Email Parsing Nodes (IMAP)} — Extract content from newsletters.
+    \item \textbf{Transform Nodes} — Map and clean scraped fields.
+    \item \textbf{OpenAI/Gemini Nodes} — Perform match scoring, text summarization, and cover letter generation.
+    \item \textbf{Webhook / API Nodes} — Push structured data into the FastAPI backend.
+\end{itemize}
+
+\subsubsection*{Origin and Rationale}
+n8n was chosen because:
+\begin{itemize}
+    \item It provides a no-code/low-code environment suited for rapid workflow construction.
+    \item It supports integration with virtually any API via native nodes.
+    \item It drastically simplifies automation processes that would otherwise require extensive backend coding.
+    \item It can run fully in the cloud, enabling fast deployment on Railway.
+\end{itemize}
+
+\subsubsection*{Graphical Representation (Description)}
+\begin{itemize}
+    \item The workflows form a directed graph: \textit{Data Source → Transformation → AI Processing → Backend API}.
+    \item The system repeats this flow periodically to keep job data up to date.
+\end{itemize}
+
+\subsection{React Frontend}
+
+\subsubsection*{Purpose}
+The React Frontend provides the user interface for interacting with the Evidi platform. Its purpose is to deliver a fast, responsive, and intuitive user experience while communicating with the backend API and presenting AI-processed job data clearly and efficiently.
+
+\subsubsection*{Functionality}
+\begin{itemize}
+    \item Displays job offers, summaries, match scores, and user-filtered results.
+    \item Provides forms for user authentication, criteria creation, and job exploration.
+    \item Sends requests to the FastAPI backend and renders returned data dynamically.
+    \item Manages user session state through JWT tokens stored securely.
+    \item Handles loading states, error feedback, pagination, and UI transitions.
+\end{itemize}
+
+\subsubsection*{Location of Source Code}
+\begin{itemize}
+    \item Entirely stored in the \texttt{/frontend/} directory.
+    \item Deployed on Vercel for seamless CI/CD and automatic static optimization.
+\end{itemize}
+
+\subsubsection*{Component and Class Structure}
+\begin{itemize}
+    \item \textbf{App.tsx} — Root component, router setup, global layout.
+    \item \textbf{pages/\*.tsx} — Page-level components (Dashboard, Login, Job Details).
+    \item \textbf{components/\*.tsx} — Reusable UI elements such as cards, modals, lists, and filters.
+    \item \textbf{services/api.ts} — API wrapper for communicating with backend endpoints.
+    \item \textbf{context/AuthContext.tsx} — Handles authentication state and token persistence.
+    \item \textbf{utils/\*.ts} — Helper methods for formatting, parsing, and error handling.
+\end{itemize}
+
+\subsubsection*{Origin and Rationale}
+React with TypeScript was selected because:
+\begin{itemize}
+    \item It provides a component-based architecture ideal for scalable UI development.
+    \item TypeScript ensures type safety, reducing runtime errors.
+    \item Strong ecosystem support (hooks, libraries, Next.js-style patterns).
+    \item Perfect compatibility with Vercel hosting and CI/CD automation.
+\end{itemize}
+
+\subsubsection*{Graphical Representation (Description)}
+\begin{itemize}
+    \item The frontend communicates exclusively with the FastAPI backend via HTTPS.
+    \item Data flows from the backend to the UI components, which update reactively.
+    \item Authentication context wraps the app and controls route access.
+\end{itemize}
 
 
 \end{document}
