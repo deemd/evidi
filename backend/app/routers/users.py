@@ -16,6 +16,9 @@ from app.models import (
     ResumeExtracted,
 )
 
+import dotenv
+dotenv.load_dotenv()
+
 router = APIRouter(prefix="/api", tags=["users"])
 
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
