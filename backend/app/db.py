@@ -3,9 +3,6 @@ import os
 from pymongo import MongoClient
 from pymongo.collection import Collection
 
-import dotenv
-dotenv.load_dotenv()
-
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME")
 USERS_COLLECTION_NAME = os.getenv("USERS_COLLECTION_NAME")
