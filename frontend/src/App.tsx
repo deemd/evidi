@@ -167,8 +167,13 @@ export default function App() {
   const handleToggleSource = (id: string) =>
     setSources(sources.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
 
-  const handleDeleteSource = (id: string) =>
-    setSources(sources.filter(s => s.id !== id));
+  const handleDeleteSource = async (id: string) => {
+    await fetch(`${API_BASE}/api/job-sources/${id}`, {
+      method: 'DELETE',
+  });
+
+  setSources((prev) => prev.filter((s) => s.id !== id));
+};
 
   const handleSyncSource = (id: string) =>
     setSources(sources.map(s => s.id === id ? { ...s, lastSync: new Date().toISOString() } : s));
@@ -334,6 +339,7 @@ export default function App() {
               onToggleSource={handleToggleSource}
               onDeleteSource={handleDeleteSource}
               onSyncSource={handleSyncSource}
+              userEmail={userEmail!}
             />
           </TabsContent>
 

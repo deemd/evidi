@@ -62,3 +62,12 @@ class JobSourceOut(BaseModel):
 class ResumeExtracted(BaseModel):
     filters: FiltersModel
     resume: str | None = None
+
+class JobSourceCreate(BaseModel):
+    # we do NOT take `id` from the client – DB will generate it
+    name: str
+    type: str
+    url: str
+    enabled: bool = True
+    lastSync: str | None = None
+    user_id: EmailStr

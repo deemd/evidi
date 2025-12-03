@@ -10,28 +10,68 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Plus, RefreshCw, Trash2, Rss, Mail, Code } from 'lucide-react';
 import { JobSource } from '../types';
 
+const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel.app';
+
 interface JobSourcesProps {
   sources: JobSource[];
   onAddSource: (source: Omit<JobSource, 'id'>) => void;
   onToggleSource: (id: string) => void;
   onDeleteSource: (id: string) => void;
   onSyncSource: (id: string) => void;
+  userEmail: string; // NEW: needed to send to API as user_id
 }
 
-export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSource, onSyncSource }: JobSourcesProps) {
+export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSource, onSyncSource, userEmail }: JobSourcesProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newSource, setNewSource] = useState({
     name: '',
-    type: 'RSS' as JobSource['type'],
     url: '',
-    enabled: true,
   });
 
-  const handleAddSource = () => {
-    if (newSource.name && newSource.url) {
-      onAddSource(newSource);
-      setNewSource({ name: '', type: 'RSS', url: '', enabled: true });
+  const handleAddSource = async () => {
+    if (!newSource.name || !newSource.url) {
+      return;
+    }
+
+    const payload = {
+      name: newSource.name,
+      type: 'API',
+      url: newSource.url,
+      enabled: true,
+      lastSync: null,
+      user_id: userEmail,
+    };
+
+    try {
+      const resp = await fetch(`${API_BASE}/api/job-sources`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        // You can add real error handling here if you like
+        console.error('Failed to create job source');
+        return;
+      }
+
+      const created = await resp.json();
+
+      // Update local state via parent
+      onAddSource({
+        name: created.name,
+        type: created.type,
+        url: created.url,
+        enabled: created.enabled,
+        lastSync: created.lastSync,
+      });
+
+      setNewSource({ name: '', url: '' });
       setIsDialogOpen(false);
+    } catch (err) {
+      console.error('Error while creating job source', err);
     }
   };
 
@@ -77,9 +117,9 @@ export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSourc
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Job Source</DialogTitle>
+              <DialogTitle>Add LinkedIn Job Source</DialogTitle>
               <DialogDescription>
-                Configure a new source to collect job offers from
+                Paste a LinkedIn search URL from an incognito browser tab. This will be saved as an API source.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -87,36 +127,23 @@ export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSourc
                 <Label htmlFor="name">Source Name</Label>
                 <Input
                   id="name"
-                  placeholder="e.g., LinkedIn Tech Jobs"
+                  placeholder="e.g., LinkedIn Paris Data Jobs"
                   value={newSource.name}
                   onChange={(e) => setNewSource({ ...newSource, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Source Type</Label>
-                <Select
-                  value={newSource.type}
-                  onValueChange={(value: JobSource['type']) => setNewSource({ ...newSource, type: value })}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RSS">RSS Feed</SelectItem>
-                    <SelectItem value="API">API</SelectItem>
-                    <SelectItem value="Email">Email</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="url">URL / Endpoint</Label>
+                <Label htmlFor="url">LinkedIn Search URL</Label>
                 <Input
                   id="url"
-                  placeholder="https://example.com/jobs/feed"
+                  placeholder="Paste your LinkedIn search URL here"
                   value={newSource.url}
                   onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
                 />
               </div>
+              <p className="text-sm text-secondary">
+                Source type will be <strong>API</strong>, enabled by default, and last sync set to <strong>Never</strong> until the first sync.
+              </p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
