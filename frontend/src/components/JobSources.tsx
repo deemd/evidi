@@ -14,11 +14,11 @@ const API_BASE = process.env.REACT_APP_API_BASE || 'https://evidi-backend.vercel
 
 interface JobSourcesProps {
   sources: JobSource[];
-  onAddSource: (source: Omit<JobSource, 'id'>) => void;
+  onAddSource: (source: JobSource) => void;
   onToggleSource: (id: string) => void;
   onDeleteSource: (id: string) => void;
   onSyncSource: (id: string) => void;
-  userEmail: string; // NEW: needed to send to API as user_id
+  userEmail: string;
 }
 
 export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSource, onSyncSource, userEmail }: JobSourcesProps) {
@@ -52,21 +52,13 @@ export function JobSources({ sources, onAddSource, onToggleSource, onDeleteSourc
       });
 
       if (!resp.ok) {
-        // You can add real error handling here if you like
         console.error('Failed to create job source');
         return;
       }
 
       const created = await resp.json();
 
-      // Update local state via parent
-      onAddSource({
-        name: created.name,
-        type: created.type,
-        url: created.url,
-        enabled: created.enabled,
-        lastSync: created.lastSync,
-      });
+      onAddSource(created);
 
       setNewSource({ name: '', url: '' });
       setIsDialogOpen(false);

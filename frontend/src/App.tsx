@@ -152,6 +152,7 @@ export default function App() {
       console.error("Error saving resume:", e);
     }
   };
+  
   const handleResumeSubmitted = () => {
     setResumeRequired(false);
     setIsCvModalOpen(false);
@@ -160,8 +161,8 @@ export default function App() {
   // ------------------------------------------------------
   // HANDLERS — SOURCES
   // ------------------------------------------------------
-  const handleAddSource = (newSource: Omit<JobSource, 'id'>) => {
-    setSources([...sources, { ...newSource, id: Date.now().toString(), lastSync: undefined }]);
+  const handleAddSource = (newSource: JobSource) => {
+    setSources([...sources, newSource]);   // 👈 use backend id as-is
   };
 
   const handleToggleSource = (id: string) =>
