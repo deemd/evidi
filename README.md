@@ -1,4 +1,4 @@
-# Evidi – AI Job Response Assistant
+<h1 align="center">Evidi – AI Job Response Assistant</h1>
 
 **Evidi** is an AI-assisted platform designed to simplify and accelerate the job-search process.
 Instead of manually browsing job boards, reviewing long descriptions, and writing tailored responses, Evidi automates the workflow from end to end: collecting job offers, filtering them based on user preferences, summarizing them with LLMs, and generating customizable motivation-letter drafts.
