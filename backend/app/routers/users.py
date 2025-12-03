@@ -1,5 +1,3 @@
-# app/routers/users.py
-
 import os
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File

@@ -1,5 +1,3 @@
-# app/routers/jobs.py
-
 import os
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File
