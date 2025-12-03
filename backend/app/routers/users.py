@@ -18,7 +18,7 @@ from app.models import (
 
 router = APIRouter(prefix="/api", tags=["users"])
 
-N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
+N8N_WEBHOOK_URL_RESUME_EXTRACTION = os.getenv("N8N_WEBHOOK_URL_RESUME_EXTRACTION")
 
 
 def get_default_filters():
@@ -126,8 +126,8 @@ def update_user_resume(email: str, payload: ResumeUpdate):
 # UPLOAD AND ANALYZE USER RESUME
 @router.post("/users/{email}/resume/upload-analyze", response_model=ResumeExtracted)
 async def upload_and_analyze_resume(email: str, file: UploadFile = File(...)):
-    if not N8N_WEBHOOK_URL:
-        raise HTTPException(status_code=599, detail="N8N_WEBHOOK_URL is not configured")
+    if not N8N_WEBHOOK_URL_RESUME_EXTRACTION:
+        raise HTTPException(status_code=599, detail="N8N_WEBHOOK_URL_RESUME_EXTRACTION is not configured")
 
     file_bytes = await file.read()
 
@@ -136,7 +136,7 @@ async def upload_and_analyze_resume(email: str, file: UploadFile = File(...)):
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
-            N8N_WEBHOOK_URL,
+            N8N_WEBHOOK_URL_RESUME_EXTRACTION,
             data={
                 "email": email,
                 "filename": file.filename,

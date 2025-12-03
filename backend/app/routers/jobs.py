@@ -1,11 +1,15 @@
 # app/routers/jobs.py
 
-from fastapi import APIRouter
+import os
+import httpx
+from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.db import job_offers_collection, job_sources_collection
 from app.models import JobOut, JobSourceOut
 
 router = APIRouter(prefix="/api", tags=["jobs"])
+
+N8N_WEBHOOK_LOAD_NEW_JOBS = os.getenv("N8N_WEBHOOK_LOAD_NEW_JOBS")
 
 
 # GET JOB OFFERS
@@ -54,3 +58,35 @@ def get_job_sources():
             )
         )
     return sources
+
+# TRIGGER LOAD NEW JOBS FROM APIFY/N8N
+@router.post("/job-offers/load-new")
+async def load_new_job_offers(user_email: str):
+    if not N8N_WEBHOOK_LOAD_NEW_JOBS:
+        raise HTTPException(
+            status_code=599,
+            detail="N8N_WEBHOOK_LOAD_NEW_JOBS is not configured",
+        )
+
+    if not user_email:
+        raise HTTPException(
+            status_code=400,
+            detail="'user_email' must be provided",
+        )
+
+    payload = {
+        "user_email": user_email
+    }
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(N8N_WEBHOOK_LOAD_NEW_JOBS, json=payload)
+
+    try:
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"n8n error: {e.response.text}",
+        )
+
+    return {"status": "ok"}
