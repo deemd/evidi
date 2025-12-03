@@ -15,7 +15,7 @@ N8N_WEBHOOK_LOAD_NEW_JOBS = os.getenv("N8N_WEBHOOK_LOAD_NEW_JOBS")
 def get_job_offers(email: str):
     job_offers: list[JobOut] = []
 
-    filtered_job_offers =job_offers_collection.find({"user_id": email})
+    filtered_job_offers = job_offers_collection.find({"user_id": email})
 
     for doc in filtered_job_offers:
         job_offers.append(
@@ -43,11 +43,14 @@ def get_job_offers(email: str):
 
 
 # JOB SOURCES
-@router.get("/job-sources", response_model=list[JobSourceOut])
-def get_job_sources():
-    sources: list[JobSourceOut] = []
-    for doc in job_sources_collection.find():
-        sources.append(
+@router.get("/users/{email}/job-sources", response_model=list[JobSourceOut])
+def get_job_sources(email: str):
+    job_sources: list[JobSourceOut] = []
+    
+    filtered_job_sources = job_sources_collection.find({"user_id": email})
+
+    for doc in filtered_job_sources:
+        job_sources.append(
             JobSourceOut(
                 id=str(doc.get("id") or doc.get("_id")),
                 name=doc["name"],
