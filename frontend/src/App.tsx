@@ -85,7 +85,7 @@ export default function App() {
       try {
         const [jobsRes, sourcesRes] = await Promise.all([
           fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-offers`),
-          fetch(`${API_BASE}/api/job-sources`)
+          fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-sources`)
         ]);
         
         if (jobsRes.ok) setJobs(await jobsRes.json());
