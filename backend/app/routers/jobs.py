@@ -60,7 +60,7 @@ def get_job_sources(email: str):
                 lastSync=doc.get("lastSync"),
             )
         )
-    return sources
+    return filtered_job_sources
 
 # TRIGGER LOAD NEW JOBS FROM APIFY/N8N
 @router.post("/job-offers/load-new")
