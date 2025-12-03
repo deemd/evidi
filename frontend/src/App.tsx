@@ -84,7 +84,7 @@ export default function App() {
     const loadRest = async () => {
       try {
         const [jobsRes, sourcesRes] = await Promise.all([
-          fetch(`${API_BASE}/api/job-offers`),
+          fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-offers`),
           fetch(`${API_BASE}/api/job-sources`)
         ]);
         
