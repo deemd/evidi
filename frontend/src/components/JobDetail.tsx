@@ -126,7 +126,6 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-line">{job.description}</p>
-                <p className="whitespace-pre-line">{job.id}</p>
               </CardContent>
             </Card>
 

@@ -180,6 +180,26 @@ export default function App() {
     setSources(sources.map(s => s.id === id ? { ...s, lastSync: new Date().toISOString() } : s));
 
   // ------------------------------------------------------
+  // HANDLERS — JOBS
+  // ------------------------------------------------------
+  const handleRefreshJobs = async () => {
+      if (!userEmail) return;
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-offers`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setJobs(data);
+        }
+      } catch (e) {
+        console.error("Error refreshing job offers:", e);
+        toast.error("Failed to refresh job offers");
+      }
+    };
+
+  // ------------------------------------------------------
   // HANDLERS — FILTERS
   // ------------------------------------------------------
   const handleUpdateFilters = (f: FilterCriteria) => {
@@ -330,7 +350,7 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="jobs">
-            <JobList jobs={jobs} onSelectJob={handleSelectJob} />
+            <JobList jobs={jobs} onSelectJob={handleSelectJob} onRefreshJobs={handleRefreshJobs}/>
           </TabsContent>
 
           <TabsContent value="sources">

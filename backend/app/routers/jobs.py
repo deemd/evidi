@@ -21,21 +21,21 @@ def get_job_offers(email: str):
     for doc in filtered_job_offers:
         job_offers.append(
             JobOut(
-                id=doc["id"],
-                title=doc["title"],
-                company=doc["company"],
-                location=doc["location"],
-                type=doc["type"],
-                salary=doc["salary"],
-                description=doc["description"],
+                id=doc.get("id", ""),
+                title=doc.get("title", ""),
+                company=doc.get("company", ""),
+                location=doc.get("location", ""),
+                type=doc.get("type", ""),
+                salary=doc.get("salary", ""),
+                description=doc.get("description", ""),
                 requirements=doc.get("requirements", []),
                 stack=doc.get("stack", []),
-                experience=doc["experience"],
-                postedDate=doc["postedDate"],
-                source=doc["source"],
-                url=doc["url"],
-                matchScore=doc["matchScore"],
-                aiSummary=doc["aiSummary"],
+                experience=doc.get("experience", ""),
+                postedDate=doc.get("postedDate", ""),
+                source=doc.get("source", ""),
+                url=doc.get("url", ""),
+                matchScore=doc.get("matchScore", 0),
+                aiSummary=doc.get("aiSummary", ""),
                 coverLetter=doc.get("coverLetter", "")
             )
         )

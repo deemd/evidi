@@ -5,15 +5,16 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { MapPin, Building2, Clock, ExternalLink, TrendingUp } from 'lucide-react';
+import { MapPin, Building2, Clock, ExternalLink, TrendingUp, RefreshCw } from 'lucide-react';
 import { JobOffer } from '../types';
 
 interface JobListProps {
   jobs: JobOffer[];
   onSelectJob: (job: JobOffer) => void;
+  onRefreshJobs: () => void;
 }
 
-export function JobList({ jobs, onSelectJob }: JobListProps) {
+export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('matchScore');
   const [filterTab, setFilterTab] = useState('all');
@@ -53,11 +54,16 @@ export function JobList({ jobs, onSelectJob }: JobListProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+
+
       <div>
         <h2 className='text-primary text-2xl font-bold'>Job Offers</h2>
         <p className=''>
           Browse and filter collected job opportunities
         </p>
+      </div>
+
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
