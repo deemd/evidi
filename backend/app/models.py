@@ -71,3 +71,13 @@ class JobSourceCreate(BaseModel):
     enabled: bool = True
     lastSync: str | None = None
     user_id: EmailStr
+
+class CoverLetterRequest(BaseModel):
+    email: str          # user email
+    job_id: str         # job offer id
+    aiSummary: str      # existing AI summary of the job
+    jobDescription: str # full job description
+    resume: str         # full user resume text
+
+class CoverLetterResponse(BaseModel):
+    coverLetter: str    # generated cover letter

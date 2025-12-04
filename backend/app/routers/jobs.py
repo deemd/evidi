@@ -3,13 +3,13 @@ import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.db import job_offers_collection, job_sources_collection
-from app.models import JobOut, JobSourceOut, JobSourceCreate
+from app.models import JobOut, JobSourceOut, JobSourceCreate, CoverLetterRequest, CoverLetterResponse
 from bson import ObjectId
 
 router = APIRouter(prefix="/api", tags=["jobs"])
 
 N8N_WEBHOOK_LOAD_NEW_JOBS = os.getenv("N8N_WEBHOOK_LOAD_NEW_JOBS")
-
+N8N_WEBHOOK_COVER_LETTER_GEN = os.getenv("N8N_WEBHOOK_COVER_LETTER_GEN")
 
 # GET JOB OFFERS
 @router.get("/users/{email}/job-offers", response_model=list[JobOut])
@@ -34,9 +34,8 @@ def get_job_offers(email: str):
                 postedDate=doc["postedDate"],
                 source=doc["source"],
                 url=doc["url"],
-                isMatch=doc["isMatch"],
                 matchScore=doc["matchScore"],
-                aiSummary=doc["aiSummary"],
+                aiSummary=doc["aiSummary"]
             )
         )
 
@@ -99,19 +98,6 @@ async def load_new_job_offers(user_email: str):
 # CREATE JOB SOURCE
 @router.post("/job-sources", response_model=JobSourceOut)
 def create_job_source(payload: JobSourceCreate):
-    """
-    Create a job source.
-
-    Example body:
-    {
-      "name": "LinkedIn Jobs RSS",
-      "type": "API",
-      "url": "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?...",
-      "enabled": true,
-      "lastSync": null,
-      "user_id": "a@gmail.com"
-    }
-    """
     doc = {
         "name": payload.name,
         "type": payload.type,
@@ -151,3 +137,49 @@ def delete_job_source(source_id: str):
         raise HTTPException(status_code=404, detail="Job source not found")
 
     return {"status": "ok"}
+
+@router.post("/cover-letter/generate", response_model=CoverLetterResponse)
+async def generate_cover_letter(payload: CoverLetterRequest):
+    if not N8N_WEBHOOK_COVER_LETTER_GEN:
+        raise HTTPException(
+            status_code=599,
+            detail="N8N_WEBHOOK_COVER_LETTER_GEN is not configured",
+        )
+
+    # Send data to n8n webhook
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            N8N_WEBHOOK_COVER_LETTER_GEN,
+            json={
+                "email": payload.email,
+                "job_id": payload.job_id,
+                "aiSummary": payload.aiSummary,
+                "jobDescription": payload.jobDescription,
+                "resume": payload.resume,
+            },
+        )
+
+    try:
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"n8n error: {e.response.text}",
+        )
+
+    # Try to parse JSON first, fall back to raw text
+    cover_letter = None
+    try:
+        data = resp.json()
+        cover_letter = data.get("coverLetter")
+    except ValueError:
+        # n8n returned plain text
+        cover_letter = resp.text
+
+    if not cover_letter:
+        raise HTTPException(
+            status_code=500,
+            detail="n8n response did not contain a cover letter",
+        )
+
+    return CoverLetterResponse(coverLetter=cover_letter)

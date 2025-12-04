@@ -68,11 +68,9 @@ Best regards`;
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {job.title}
-            {job.isMatch && (
-              <Badge variant="default">
+            {<Badge variant="default">
                 {job.matchScore}% Match
-              </Badge>
-            )}
+              </Badge>}
           </DialogTitle>
           <DialogDescription className="flex flex-col gap-2 pt-2">
             <span className="flex items-center gap-2">
@@ -131,7 +129,7 @@ Best regards`;
 
             <Card>
               <CardHeader>
-                <CardTitle>Technology Stack</CardTitle>
+                <CardTitle>Skills</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -170,7 +168,7 @@ Best regards`;
                   <p className="text-primary">{job.aiSummary}</p>
                 </div>
 
-                <div>
+                {/* <div>
                   <h3 className="mb-2">Match Score Breakdown</h3>
                   <div className="space-y-3">
                     <div>
@@ -212,7 +210,7 @@ Best regards`;
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 <div>
                   <h3 className="mb-2">Matching Skills</h3>
