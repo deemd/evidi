@@ -19,26 +19,32 @@ def get_job_offers(email: str):
     filtered_job_offers = job_offers_collection.find({"user_id": email})
 
     for doc in filtered_job_offers:
-        job_offers.append(
-            JobOut(
-                id=doc.get("id", ""),
-                title=doc.get("title", ""),
-                company=doc.get("company", ""),
-                location=doc.get("location", ""),
-                type=doc.get("type", ""),
-                salary=doc.get("salary", ""),
-                description=doc.get("description", ""),
-                requirements=doc.get("requirements", []),
-                stack=doc.get("stack", []),
-                experience=doc.get("experience", ""),
-                postedDate=doc.get("postedDate", ""),
-                source=doc.get("source", ""),
-                url=doc.get("url", ""),
-                matchScore=doc.get("matchScore", 0),
-                aiSummary=doc.get("aiSummary", ""),
-                coverLetter=doc.get("coverLetter", "")
+        try:
+            job_offers.append(
+                JobOut(
+                    id=doc.get("id", ""),
+                    title=doc.get("title", ""),
+                    company=doc.get("company", ""),
+                    location=doc.get("location", ""),
+                    type=doc.get("type", ""),
+                    salary=doc.get("salary", ""),
+                    description=doc.get("description", ""),
+                    requirements=doc.get("requirements", []),
+                    stack=doc.get("stack", []),
+                    experience=doc.get("experience", ""),
+                    postedDate=doc.get("postedDate", ""),
+                    source=doc.get("source", ""),
+                    url=doc.get("url", ""),
+                    matchScore=doc.get("matchScore", 0),
+                    aiSummary=doc.get("aiSummary", ""),
+                    coverLetter=doc.get("coverLetter", "")
+                )
             )
-        )
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"n8n error: {e.response.text}",
+            )
 
     return job_offers
 
