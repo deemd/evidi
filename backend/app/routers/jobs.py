@@ -153,7 +153,7 @@ async def generate_cover_letter(payload: CoverLetterRequest):
             N8N_WEBHOOK_COVER_LETTER_GEN,
             json={
                 "email": payload.email,
-                "job_id": payload.job_id,
+                "id": payload.id,
                 "jobDescription": payload.jobDescription,
                 "resume": payload.resume
             },

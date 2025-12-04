@@ -74,7 +74,7 @@ class JobSourceCreate(BaseModel):
 
 class CoverLetterRequest(BaseModel):
     email: str          # user email
-    job_id: str         # job offer id
+    id: str         # job offer id
     jobDescription: str # full job description
     resume: str         # full user resume text
 
