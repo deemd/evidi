@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { MapPin, Building2, Clock, DollarSign, ExternalLink, Sparkles, Copy, Check } from 'lucide-react';
 import { JobOffer } from '../types';
+import { toast } from 'sonner';
 
 interface JobDetailProps {
   job: JobOffer | null;
@@ -14,37 +15,52 @@ interface JobDetailProps {
   onClose: () => void;
 }
 
+const API_BASE = 'https://evidi-backend.vercel.app';
+
 export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
-  const [motivationLetter, setMotivationLetter] = useState('');
+  const [motivationLetter, setMotivationLetter] = useState(job?.coverLetter ?? '');
   const [isCopied, setIsCopied] = useState(false);
+
+  useEffect(() => {
+    setMotivationLetter(job?.coverLetter ?? '');
+  }, [job?.id, job?.coverLetter]);
 
   if (!job) return null;
 
-  const handleGenerateLetter = () => {
+  const handleGenerateLetter = async () => {
+    if (!job) return;
+
     setIsGeneratingLetter(true);
-    
-    // Simulate AI generation
-    setTimeout(() => {
-      const letter = `Dear Hiring Manager at ${job.company},
 
-I am writing to express my strong interest in the ${job.title} position. With my extensive experience in ${job.stack.slice(0, 3).join(', ')}, I am confident that I would be a valuable addition to your team.
+    try {
+      const res = await fetch(`${API_BASE}/api/cover-letter/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+          body: JSON.stringify({
+          id: job.id,
+          jobDescription: job.description,
+          // TODO: replace '' with the actual resume text when available
+          resume: '',
+        }),
+      });
 
-Throughout my career, I have developed a deep expertise in modern web development technologies and best practices. My background aligns perfectly with your requirements, particularly in:
+      if (!res.ok) {
+        console.error('Failed to generate cover letter', await res.text());
+        toast.error('Failed to generate cover letter');
+        return;
+      }
 
-• ${job.requirements[0] || 'Building scalable web applications'}
-• ${job.requirements[1] || 'Collaborating with cross-functional teams'}
-• ${job.requirements[2] || 'Implementing best practices and code quality standards'}
-
-I am particularly excited about this opportunity because ${job.company} is known for its innovative approach to technology. The ${job.location} location and ${job.type.toLowerCase()} arrangement align well with my preferences.
-
-I would welcome the opportunity to discuss how my skills and experience can contribute to your team's success. Thank you for considering my application.
-
-Best regards`;
-      
-      setMotivationLetter(letter);
+      const data = await res.json();
+        setMotivationLetter(data.coverLetter ?? '');
+    } catch (err) {
+      console.error('Error generating cover letter', err);
+      toast.error('Error generating cover letter');
+    } finally {
       setIsGeneratingLetter(false);
-    }, 2500);
+    }
   };
 
   const handleCopyLetter = () => {

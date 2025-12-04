@@ -15,6 +15,7 @@ export interface JobOffer {
   isMatch: boolean;
   matchScore: number;
   aiSummary?: string;
+  coverLetter?: string;
 }
 
 export interface FilterCriteria {
