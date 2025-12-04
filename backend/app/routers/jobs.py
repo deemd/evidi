@@ -138,6 +138,7 @@ def delete_job_source(source_id: str):
 
     return {"status": "ok"}
 
+# GENERATE COVER LETTER FOR A JOB OFFER
 @router.post("/cover-letter/generate", response_model=CoverLetterResponse)
 async def generate_cover_letter(payload: CoverLetterRequest):
     if not N8N_WEBHOOK_COVER_LETTER_GEN:
@@ -154,7 +155,7 @@ async def generate_cover_letter(payload: CoverLetterRequest):
                 "email": payload.email,
                 "job_id": payload.job_id,
                 "jobDescription": payload.jobDescription,
-                "resume": payload.resume,
+                "resume": payload.resume
             },
         )
 
