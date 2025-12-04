@@ -176,8 +176,28 @@ export default function App() {
   setSources((prev) => prev.filter((s) => s.id !== id));
 };
 
-  const handleSyncSource = (id: string) =>
-    setSources(sources.map(s => s.id === id ? { ...s, lastSync: new Date().toISOString() } : s));
+    const handleSyncSource = async (id: string) => {
+      if (!userEmail) return;
+
+      try {
+        // POST to fire-and-forget load-new jobs endpoint
+        await fetch(`${API_BASE}/api/job-offers/load-new`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_email: userEmail }),
+        });
+
+        // Update UI optimistically
+        setSources(sources.map(s =>
+          s.id === id ? { ...s, lastSync: new Date().toISOString() } : s
+        ));
+
+        toast.success("Sync started");
+      } catch (e) {
+        console.error("Error syncing source:", e);
+        toast.error("Failed to sync source");
+      }
+    };
 
   // ------------------------------------------------------
   // HANDLERS — JOBS

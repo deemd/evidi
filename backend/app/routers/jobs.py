@@ -71,7 +71,6 @@ def get_job_sources(email: str):
 
     return job_sources
 
-# TRIGGER LOAD NEW JOBS FROM APIFY/N8N
 @router.post("/job-offers/load-new")
 async def load_new_job_offers(user_email: str):
     if not N8N_WEBHOOK_LOAD_NEW_JOBS:
@@ -86,22 +85,21 @@ async def load_new_job_offers(user_email: str):
             detail="'user_email' must be provided",
         )
 
-    payload = {
-        "user_email": user_email
-    }
+    payload = { "user_email": user_email }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(N8N_WEBHOOK_LOAD_NEW_JOBS, json=payload)
-
+    # FIRE-AND-FORGET (only ensure the POST request is sent correctly)
     try:
-        resp.raise_for_status()
-    except httpx.HTTPStatusError as e:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.post(N8N_WEBHOOK_LOAD_NEW_JOBS, json=payload)
+    except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"n8n error: {e.response.text}",
+            detail=f"Failed to call n8n webhook: {str(e)}",
         )
 
+    # Always return ok if the request was sent without error
     return {"status": "ok"}
+
 
 # CREATE JOB SOURCE
 @router.post("/job-sources", response_model=JobSourceOut)
