@@ -30,7 +30,9 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
 
   const handleGenerateLetter = async () => {
     if (!job) return;
-
+    
+    // Reset the letter and go to loading mode
+    setMotivationLetter('');
     setIsGeneratingLetter(true);
 
     try {

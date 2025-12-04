@@ -21,7 +21,7 @@ def get_job_offers(email: str):
     for doc in filtered_job_offers:
         job_offers.append(
             JobOut(
-                id=str(doc.get("_id")),
+                id=doc["id"],
                 title=doc["title"],
                 company=doc["company"],
                 location=doc["location"],
