@@ -27,6 +27,7 @@ export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
     
     const matchesTab = 
       filterTab === 'all' ||
+      (filterTab === 'matched' && job.isMatch) ||
       (filterTab === 'new' && new Date(job.postedDate).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000);
     
     return matchesSearch && matchesTab;
@@ -92,6 +93,7 @@ export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
       <Tabs value={filterTab} onValueChange={setFilterTab}>
         <TabsList>
           <TabsTrigger value="all">All Jobs ({jobs.length})</TabsTrigger>
+          <TabsTrigger value="matched">Matched ({jobs.filter(j => j.isMatch).length})</TabsTrigger>
           <TabsTrigger value="new">New ({newCount})</TabsTrigger>
         </TabsList>
 
@@ -115,10 +117,12 @@ export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
                       <div className="flex-1">
                         <CardTitle className="flex items-center gap-2">
                           <p className='text-primary font-medium'>{job.title}</p>
+                          {job.isMatch && (
                             <Badge variant="default" className="gap-1">
                               <TrendingUp className="h-3 w-3" />
                               {job.matchScore}% Match
                             </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="flex flex-col gap-1 mt-2">
                           <span className="flex items-center gap-1">

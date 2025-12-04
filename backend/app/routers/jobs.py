@@ -36,6 +36,7 @@ def get_job_offers(email: str):
                     source=doc.get("source", ""),
                     url=doc.get("url", ""),
                     matchScore=doc.get("matchScore", 0),
+                    isMatch=doc.get("isMatch", False),
                     aiSummary=doc.get("aiSummary", ""),
                     coverLetter=doc.get("coverLetter", "")
                 )
