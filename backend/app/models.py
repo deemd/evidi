@@ -49,6 +49,7 @@ class JobOut(BaseModel):
     url: str
     matchScore: int
     aiSummary: str
+    coverLetter: str | None = ""
 
 class JobSourceOut(BaseModel):
     id: str
