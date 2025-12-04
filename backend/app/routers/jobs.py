@@ -153,7 +153,6 @@ async def generate_cover_letter(payload: CoverLetterRequest):
             json={
                 "email": payload.email,
                 "job_id": payload.job_id,
-                "aiSummary": payload.aiSummary,
                 "jobDescription": payload.jobDescription,
                 "resume": payload.resume,
             },
