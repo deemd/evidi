@@ -192,6 +192,7 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           setJobs(data);
+          toast.success("Job offers updated successfully");
         }
       } catch (e) {
         console.error("Error refreshing job offers:", e);

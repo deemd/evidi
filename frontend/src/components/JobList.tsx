@@ -55,15 +55,20 @@ export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
+        <div>
+          <h2 className='text-primary text-2xl font-bold'>Job Offers</h2>
+          <p className=''>
+            Browse and filter collected job opportunities
+          </p>
+        </div>
 
-
-      <div>
-        <h2 className='text-primary text-2xl font-bold'>Job Offers</h2>
-        <p className=''>
-          Browse and filter collected job opportunities
-        </p>
-      </div>
-
+        <Button
+            size="sm"
+            onClick={onRefreshJobs}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Update
+        </Button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
