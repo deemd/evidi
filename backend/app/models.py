@@ -47,7 +47,6 @@ class JobOut(BaseModel):
     postedDate: str
     source: str
     url: str
-    isMatch: bool
     matchScore: int
     aiSummary: str
 
