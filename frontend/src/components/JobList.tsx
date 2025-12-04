@@ -123,6 +123,12 @@ export function JobList({ jobs, onSelectJob, onRefreshJobs }: JobListProps) {
                               {job.matchScore}% Match
                             </Badge>
                           )}
+                          {!job.isMatch && (
+                            <Badge variant="secondary" className="gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {job.matchScore}% Match
+                            </Badge>
+                          )}
                         </CardTitle>
                         <CardDescription className="flex flex-col gap-1 mt-2">
                           <span className="flex items-center gap-1">

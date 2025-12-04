@@ -88,7 +88,17 @@ export default function App() {
           fetch(`${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-sources`)
         ]);
         
-        if (jobsRes.ok) setJobs(await jobsRes.json());
+        if (jobsRes.ok) {
+          const rawJobs = await jobsRes.json();
+
+          // Add isMatch dynamically based on matchScore
+          const jobsWithMatch = rawJobs.map((job: JobOffer) => ({
+            ...job,
+            isMatch: (job.matchScore ?? 0) > 70
+          }));
+
+          setJobs(jobsWithMatch);
+        }
         
         if (sourcesRes.ok) setSources(await sourcesRes.json());
       } catch (e) {
@@ -204,13 +214,19 @@ export default function App() {
       if (!userEmail) return;
 
       try {
-        const res = await fetch(
+        const jobsRes = await fetch(
           `${API_BASE}/api/users/${encodeURIComponent(userEmail)}/job-offers`
         );
-        if (res.ok) {
-          const data = await res.json();
-          setJobs(data);
-          toast.success("Job offers updated successfully");
+        if (jobsRes.ok) {
+          const rawJobs = await jobsRes.json();
+
+          // Add isMatch dynamically based on matchScore
+          const jobsWithMatch = rawJobs.map((job: JobOffer) => ({
+            ...job,
+            isMatch: (job.matchScore ?? 0) > 70
+          }));
+
+          setJobs(jobsWithMatch);
         }
       } catch (e) {
         console.error("Error refreshing job offers:", e);
@@ -365,6 +381,7 @@ export default function App() {
               matchedJobs={matchedJobs.length}
               appliedJobs={12}
               responseRate={35}
+              jobs={jobs}
             />
           </TabsContent>
 

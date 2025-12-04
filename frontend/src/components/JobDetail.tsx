@@ -116,7 +116,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Job Details</TabsTrigger>
             <TabsTrigger value="analysis">AI Analysis</TabsTrigger>
-            <TabsTrigger value="letter">Motivation Letter</TabsTrigger>
+            <TabsTrigger value="letter">Cover Letter</TabsTrigger>
           </TabsList>
 
           <TabsContent value="details" className="space-y-4">
@@ -247,7 +247,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
           <TabsContent value="letter" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Generate Motivation Letter</CardTitle>
+                <CardTitle>Generate Cover Letter</CardTitle>
                 <CardDescription>
                   AI-powered personalized cover letter for this position
                 </CardDescription>
@@ -257,7 +257,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
                   <div className="flex flex-col items-center justify-center py-12">
                     <Sparkles className="h-12 w-12 text-primary mb-4" />
                     <p className="text-primary mb-4 text-center">
-                      Generate a customized motivation letter based on your profile and this job posting
+                      Generate a customized cover letter based on your profile and this job posting
                     </p>
                     <Button onClick={handleGenerateLetter} disabled={isGeneratingLetter}>
                       {isGeneratingLetter ? (
@@ -268,7 +268,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
                       ) : (
                         <>
                           <Sparkles className="mr-2 h-4 w-4" />
-                          Generate Motivation Letter
+                          Generate Cover Letter
                         </>
                       )}
                     </Button>
