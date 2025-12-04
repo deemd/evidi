@@ -36,7 +36,7 @@ def get_job_offers(email: str):
                 url=doc["url"],
                 matchScore=doc["matchScore"],
                 aiSummary=doc["aiSummary"],
-                
+                coverLetter=doc.get("coverLetter", "")
             )
         )
 

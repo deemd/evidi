@@ -295,7 +295,6 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
                       <Button
                         variant="outline"
                         onClick={() => {
-                          setMotivationLetter('');
                           handleGenerateLetter();
                         }}
                       >
