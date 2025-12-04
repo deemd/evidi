@@ -30,7 +30,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
 
   const handleGenerateLetter = async () => {
     if (!job) return;
-    
+
     // Reset the letter and go to loading mode
     setMotivationLetter('');
     setIsGeneratingLetter(true);
@@ -126,6 +126,7 @@ export function JobDetail({ job, isOpen, onClose }: JobDetailProps) {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-line">{job.description}</p>
+                <p className="whitespace-pre-line">{job.id}</p>
               </CardContent>
             </Card>
 
