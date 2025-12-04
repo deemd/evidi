@@ -181,11 +181,9 @@ export default function App() {
 
       try {
         // POST to fire-and-forget load-new jobs endpoint
-        await fetch(`${API_BASE}/api/job-offers/load-new`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_email: userEmail }),
-        });
+        await fetch(`${API_BASE}/api/job-offers/load-new`, 
+          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_email: userEmail }) }
+          );
 
         // Update UI optimistically
         setSources(sources.map(s =>

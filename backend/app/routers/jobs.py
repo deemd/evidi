@@ -3,7 +3,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from app.db import job_offers_collection, job_sources_collection
-from app.models import JobOut, JobSourceOut, JobSourceCreate, CoverLetterRequest, CoverLetterResponse
+from app.models import JobOut, JobSourceOut, JobSourceCreate, CoverLetterRequest, CoverLetterResponse, LoadNewJobsRequest
 from bson import ObjectId
 
 router = APIRouter(prefix="/api", tags=["jobs"])
@@ -72,12 +72,14 @@ def get_job_sources(email: str):
     return job_sources
 
 @router.post("/job-offers/load-new")
-async def load_new_job_offers(user_email: str):
+async def load_new_job_offers(payload: LoadNewJobsRequest):
     if not N8N_WEBHOOK_LOAD_NEW_JOBS:
         raise HTTPException(
             status_code=599,
             detail="N8N_WEBHOOK_LOAD_NEW_JOBS is not configured",
         )
+
+    user_email = payload.user_email
 
     if not user_email:
         raise HTTPException(
@@ -85,19 +87,19 @@ async def load_new_job_offers(user_email: str):
             detail="'user_email' must be provided",
         )
 
-    payload = { "user_email": user_email }
+    payload_dict = {
+        "user_email": user_email
+    }
 
-    # FIRE-AND-FORGET (only ensure the POST request is sent correctly)
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            await client.post(N8N_WEBHOOK_LOAD_NEW_JOBS, json=payload)
+            await client.post(N8N_WEBHOOK_LOAD_NEW_JOBS, json=payload_dict)
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to call n8n webhook: {str(e)}",
         )
 
-    # Always return ok if the request was sent without error
     return {"status": "ok"}
 
 

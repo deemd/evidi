@@ -80,3 +80,6 @@ class CoverLetterRequest(BaseModel):
 
 class CoverLetterResponse(BaseModel):
     coverLetter: str    # generated cover letter
+
+class LoadNewJobsRequest(BaseModel):
+    user_email: str
