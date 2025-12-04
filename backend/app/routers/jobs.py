@@ -147,12 +147,10 @@ async def generate_cover_letter(payload: CoverLetterRequest):
             detail="N8N_WEBHOOK_COVER_LETTER_GEN is not configured",
         )
 
-    # Send data to n8n webhook
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(
             N8N_WEBHOOK_COVER_LETTER_GEN,
             json={
-                "email": payload.email,
                 "id": payload.id,
                 "jobDescription": payload.jobDescription,
                 "resume": payload.resume
@@ -167,7 +165,6 @@ async def generate_cover_letter(payload: CoverLetterRequest):
             detail=f"n8n error: {e.response.text}",
         )
 
-    # Try to parse JSON first, fall back to raw text
     cover_letter = None
     try:
         data = resp.json()
