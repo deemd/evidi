@@ -35,15 +35,15 @@ evidi/
 ├── backend/                                   # FastAPI application
 │   ├── public/
 │   ├── app/
-│   │   ├── main.py                            # Entry point for FastAPI
-│   │   ├── api/                               # Routes: auth, jobs, ai, criteria...
-│   │   ├── core/                              # Config, security, JWT, hashing
-│   │   ├── db/                                # MongoDB client & collections
-│   │   └── models/                            # Data models
+│   │   ├── routers/                           # Routes: auth, jobs, ai, criteria...
+│   │   ├── __init__.py
+│   │   ├── db.py                              # MongoDB client & collections
+│   │   └── models.py                          # Data models
 │   ├── tests/
 │   ├── main.py                                # Entry point for Vercel
-│   ├── .env.example
-│   └── requirements.txt
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   └── vercel.json
 │
 ├── frontend/                                  # React + TypeScript web interface
 │   ├── public/
@@ -54,7 +54,7 @@ evidi/
 │
 ├── n8n/                                       # Workflow automation layer
 │   ├── workflows/                             # JSON exports of automation workflows
-│   │   ├── cv_analysis_pipeline.json
+│   │   ├── resume_analysis_pipeline.json
 │   │   ├── job_scraping_and_matching.json
 │   │   └── cover_letter_generator.json
 │   ├── docs/
