@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "3f85f600-afcc-401d-b89d-1c1e329098bb",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        -240
+      ],
+      "id": "d386d937-64f6-4100-9adc-b85c753680e0",
+      "name": "Webhook",
+      "webhookId": "3f85f600-afcc-401d-b89d-1c1e329098bb"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a tailored cover letter using the information below.\n\nCandidate’s resume\n\"\"\"\n{{ $json.resume }}\n\"\"\"\n\nJob offer description\n\"\"\"\n{{ $json.description }}\n\"\"\"\n\nPlease:\n\nWrite a single professional cover letter targeted specifically to the role described in the job offer.\n\nUse the candidate’s resume as the only source of their skills, experience, and achievements. Do not invent any new facts.\n\nEmphasize the 2–4 experiences or achievements from the resume that best match the requirements and responsibilities in the job offer.\n\nMention the company name and job title if they are present in the job offer. If no hiring manager name is provided, use “Dear Hiring Manager,” as the greeting.\n\nNaturally include important keywords and requirements from the job offer so the letter aligns well with ATS screening.\n\nKeep the tone confident, clear, and concise, and avoid clichés and overly generic phrases.\n\nAim for about 250–400 words.\n\nReturn only the final cover letter text, with no explanations or additional formatting.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert career copywriter specializing in concise, tailored cover letters.\nYour job is to write a single, polished cover letter in English using the candidate’s resume and the job description provided.\n\nFollow these rules:\n\nGoal & audience\n\nWrite a professional, confident, and friendly cover letter suitable for an online application or email body.\n\nFocus on showing fit between the candidate and the specific role and company.\n\nContent & tailoring\n\nUse only information that appears in the resume and job description. Do not invent skills, dates, companies, or achievements.\n\nPrioritize and highlight the 2–4 most relevant experiences or achievements from the resume that match the job description.\n\nNaturally incorporate important keywords and requirements from the job description (for ATS compatibility), but avoid keyword stuffing.\n\nIf the company name, role title, or hiring manager name are present in the job description, use them.\n\nIf no hiring manager name is given, address the letter to “Dear Hiring Manager,”.\n\nIf no company name is given, refer generically to “your company” or “your organization”.\n\nStructure\n\nStandard cover letter structure:\n\nGreeting\n\nOpening paragraph: position you’re applying for + brief hook on why you’re a strong fit.\n\n1–3 body paragraphs: specific, resume-backed examples that show relevant skills, impact, and alignment with the role.\n\nClosing paragraph: enthusiasm, call to action, and sign-off.\n\nEnd with a professional closing such as “Sincerely,” or “Best regards,” followed by the candidate’s name (from the resume if available).\n\nStyle & tone\n\nClear, concise, and easy to read.\n\nAvoid clichés (“I am writing to express my interest…”, “team player”, “hard worker”) when possible—rewrite them into more concrete, specific statements.\n\nAvoid exaggeration, flattery, and buzzwords; focus on evidence-based strengths (quantified impact where possible).\n\nLength & format\n\nAim for about 250–400 words, unless the job description clearly demands something shorter or longer.\n\nOutput plain text only (no markdown, bullet points, or headings).\n\nAssumptions\n\nIf some details are missing (e.g., location, exact dates), write a generic but strong cover letter without asking clarifying questions.\n\nNever mention these instructions or the resume/job description sections explicitly in the final letter."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        -96
+      ],
+      "id": "eef0eeba-6a34-4103-bbfd-fab77e9dcc72",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"coverLetter\": {\n      \"type\": \"string\",\n      \"description\": \"Text containing the generated cover letter, as a single plain-text string (no markdown, no extra formatting).\"\n    }\n  },\n  \"required\": [\"coverLetter\"],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        80
+      ],
+      "id": "8ada7818-87b4-441b-a808-ff6b6ca704af",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        80
+      ],
+      "id": "f1c5e801-e4a5-4e7c-83a8-dfc0a011e34a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eF99RZquFBIYFueV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "job-offers",
+        "updateKey": "=id",
+        "fields": "coverLetter",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        -224
+      ],
+      "id": "148eceb4-249a-42dd-a3c4-f3593e346df5",
+      "name": "Find and update documents",
+      "alwaysOutputData": false,
+      "credentials": {
+        "mongoDb": {
+          "id": "M5eG0IvN4gC006sz",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eca0825b-26b8-4180-8a17-c1a8594848f6",
+              "name": "id",
+              "value": "={{ $json.body.id }}",
+              "type": "string"
+            },
+            {
+              "id": "489dabda-4ead-4c04-bdcf-a14d9cf237d6",
+              "name": "description",
+              "value": "={{ $json.body.jobDescription }}",
+              "type": "string"
+            },
+            {
+              "id": "68dc9761-a883-4b89-b62e-c51e4c0e83d3",
+              "name": "resume",
+              "value": "={{ $json.body.resume }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        -240
+      ],
+      "id": "e9607511-6674-4c70-8d8b-7cfbcfd332af",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        384,
+        -224
+      ],
+      "id": "a6979cb6-4b04-4b96-9c56-554d1b204135",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ab6f15a3-1cf7-49b8-8d02-ea26dd767096",
+              "name": "coverLetter",
+              "value": "={{ $json.output.coverLetter }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -96
+      ],
+      "id": "56e10320-72e4-4954-84ae-50d51d79c4fc",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Find and update documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "host": "primary-production-3c5b.up.railway.app",
+          "user-agent": "python-httpx/0.28.1",
+          "content-length": "3454",
+          "accept": "*/*",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "x-forwarded-for": "35.174.13.78",
+          "x-forwarded-host": "primary-production-3c5b.up.railway.app",
+          "x-forwarded-proto": "https",
+          "x-railway-edge": "railway/us-east4-eqdc4a",
+          "x-railway-request-id": "s9169ZlnT5mo2JTfozsQ6Q",
+          "x-real-ip": "35.174.13.78",
+          "x-request-start": "1764844481582"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "id": "4325404036a@gmail.com",
+          "jobDescription": "We are looking for an experienced Full Stack Developer to join our growing team. You will work on cutting-edge projects using modern technologies.",
+          "resume": "Nicolas DESJONQUERES\nRecherche de stage – Data Scientist / AI Engineer\nParis, France | nicolas.desjonqueres@gmail.com | +33 7 69 66 62 88 | linkedin.com/in/ndesjonqueres\ngithub.com/ndesjonq\nProfil\nÉtudiant en M2 Data & IA à l’ESILV Paris, je recherche un stage de 6 mois à partir de janvier 2026 en Data Science\nou AI Engineering. Je suis particulièrement intéressé par le développement d’applications intégrant de l’IA, le\nMachine Learning appliqué et la visualisation de données.\nExpériences\nProjet - Webapp fullstack avec workflows IA, Université d’Hanyang, Corée du Sud \nSeptembre 2025 - présent\n• \nDéveloppement d’une webapp pour automatiser la recherche, le filtrage et la réponse aux offres d’emploi\n• \nBackend FastAPI et frontend React + TypeScript connectés à MongoDB Atlas\n• \nAutomatisation de workflows avec n8n pour l’ingestion des offres et l’analyse de CV, utilisation de l’API OpenAI\n• \nDéploiement cloud sur Render, Vercel et n8n.cloud\nCompétences travaillées : React, TypeScript, FastAPI, MongoDB Atlas, n8n, API OpenAI, Docker, Render, Vercel\nStage - Analyste de données, Natixis CIB - Paris, France Avril 2025 – Août 2025\n• \nCréation d’un dashboard PowerBI. Sujet : données de contrôles sur des opérations financières\n• \nImplémentation de méthodes de Machine Learning pour la prédiction de stocks d’anomalies\nCompétences travaillées : SQL, PowerBI, Python, Machine Learning\nProjet - Revue de code assistée par un LLM, ESILV x Coreoz - Paris, France Sept. 2024 – Févr. 2025\n• \nProjet de 6 mois avec une équipe de 5 étudiants en collaboration avec Coreoz, entreprise de consulting digital\n• \nMise en place d’une solution de revue de code automatisée sur un repository GitLab par un modèle d’IA\n• \nRéalisation de benchmarks de différents LLM, développement d’une pipeline CI/CD\nCompétences travaillées : GitLab, CI/CD, Python, Yaml, API OpenAI\nFormations\nESILV Paris, Master – Majeure Data & IA \nSept. 2021 – présent\n• \nSpécialisation dans l’application de méthodes de Machine Learning et la visualisation de données\n• \nFormation Soft Skills : Design Thinking, Coopération en équipe, MBTI, méthodologie Scrum\n• \nParticipation à un hackathon intra-école / Sujet : développer une application de tri de déchets\n• \nOption : parcours High Performance Computing & IA\nUniversité d’Hanyang, Echange universitaire, Séoul, Corée du Sud Sept. 2025 – Déc. 2025\n• \nApplications des modèles d’IA dans la finance - Projets: webapp (voir ci-dessus), vision par ordinateur\nUniversitat de Vic, Echange universitaire, Vic, Espagne Févr. 2024 – Juin 2024\n• \nProjet de 3 mois - Développement d’une application en C# et d’une base de données MySQL\nCompétences & autres\nLangages de programmation : Python, C#, JavaScript, C, SQL\nOutils et logiciels : Github, PowerBI, Docker, Figma, Supabase, Pack Office\nSoft skills : méthode Agile & Scrum, Design Thinking, esprit d’équipe, adaptabilité\nLangues : Français (langue maternelle), Anglais C1 (TOEFL ITP 640/677)\nCentres d’intérêt : sport (musculation, escalade), jeux vidéos, lecture, voyages"
+        },
+        "webhookUrl": "https://webhook-processor-production-3263.up.railway.app/webhook-test/3f85f600-afcc-401d-b89d-1c1e329098bb",
+        "executionMode": "test"
+      }
+    ],
+    "AI Agent": [
+      {
+        "output": {
+          "coverLetter": "Dear Hiring Manager,\n\nI am writing to express my keen interest in the Full Stack Developer position. As an M2 Data & AI student at ESILV Paris, currently seeking a 6-month internship, my experience developing integrated AI applications and working with modern technologies aligns well with the demands of this role.\n\nMy recent project at Hanyang University involved the development of a full-stack web application designed to automate job search and application workflows. This project provided hands-on experience with a FastAPI backend and a React + TypeScript frontend, connected to MongoDB Atlas, and deployed to cloud platforms like Render and Vercel. This directly reflects my capability to build and deploy complex applications using a comprehensive range of modern full-stack tools.\n\nFurthermore, my collaboration with Coreoz on an AI-assisted code review solution involved setting up an automated code review system on a GitLab repository and developing a CI/CD pipeline. This experience demonstrates my proficiency in continuous integration and deployment practices, essential for cutting-edge projects. Additionally, my work at Universitat de Vic included developing an application in C# with a MySQL database, reinforcing my skills in application and database development.\n\nI am enthusiastic about the opportunity to contribute to your company’s innovative projects. My background in AI and practical full-stack development makes me a strong candidate, and I am eager to discuss how my skills can benefit your team.\n\nSincerely,\nNicolas DESJONQUERES"
+        }
+      }
+    ],
+    "Find and update documents": [
+      {
+        "coverLetter": "Dear Hiring Manager,\n\nI am writing to express my keen interest in the Full Stack Developer position. As an M2 Data & AI student at ESILV Paris, currently seeking a 6-month internship, my experience developing integrated AI applications and working with modern technologies aligns well with the demands of this role.\n\nMy recent project at Hanyang University involved the development of a full-stack web application designed to automate job search and application workflows. This project provided hands-on experience with a FastAPI backend and a React + TypeScript frontend, connected to MongoDB Atlas, and deployed to cloud platforms like Render and Vercel. This directly reflects my capability to build and deploy complex applications using a comprehensive range of modern full-stack tools.\n\nFurthermore, my collaboration with Coreoz on an AI-assisted code review solution involved setting up an automated code review system on a GitLab repository and developing a CI/CD pipeline. This experience demonstrates my proficiency in continuous integration and deployment practices, essential for cutting-edge projects. Additionally, my work at Universitat de Vic included developing an application in C# with a MySQL database, reinforcing my skills in application and database development.\n\nI am enthusiastic about the opportunity to contribute to your company’s innovative projects. My background in AI and practical full-stack development makes me a strong candidate, and I am eager to discuss how my skills can benefit your team.\n\nSincerely,\nNicolas DESJONQUERES",
+        "id": "4325404036a@gmail.com"
+      }
+    ],
+    "Edit Fields": [
+      {
+        "id": "4325404036a@gmail.com",
+        "description": "We are looking for an experienced Full Stack Developer to join our growing team. You will work on cutting-edge projects using modern technologies.",
+        "resume": "Nicolas DESJONQUERES\nRecherche de stage – Data Scientist / AI Engineer\nParis, France | nicolas.desjonqueres@gmail.com | +33 7 69 66 62 88 | linkedin.com/in/ndesjonqueres\ngithub.com/ndesjonq\nProfil\nÉtudiant en M2 Data & IA à l’ESILV Paris, je recherche un stage de 6 mois à partir de janvier 2026 en Data Science\nou AI Engineering. Je suis particulièrement intéressé par le développement d’applications intégrant de l’IA, le\nMachine Learning appliqué et la visualisation de données.\nExpériences\nProjet - Webapp fullstack avec workflows IA, Université d’Hanyang, Corée du Sud \nSeptembre 2025 - présent\n• \nDéveloppement d’une webapp pour automatiser la recherche, le filtrage et la réponse aux offres d’emploi\n• \nBackend FastAPI et frontend React + TypeScript connectés à MongoDB Atlas\n• \nAutomatisation de workflows avec n8n pour l’ingestion des offres et l’analyse de CV, utilisation de l’API OpenAI\n• \nDéploiement cloud sur Render, Vercel et n8n.cloud\nCompétences travaillées : React, TypeScript, FastAPI, MongoDB Atlas, n8n, API OpenAI, Docker, Render, Vercel\nStage - Analyste de données, Natixis CIB - Paris, France Avril 2025 – Août 2025\n• \nCréation d’un dashboard PowerBI. Sujet : données de contrôles sur des opérations financières\n• \nImplémentation de méthodes de Machine Learning pour la prédiction de stocks d’anomalies\nCompétences travaillées : SQL, PowerBI, Python, Machine Learning\nProjet - Revue de code assistée par un LLM, ESILV x Coreoz - Paris, France Sept. 2024 – Févr. 2025\n• \nProjet de 6 mois avec une équipe de 5 étudiants en collaboration avec Coreoz, entreprise de consulting digital\n• \nMise en place d’une solution de revue de code automatisée sur un repository GitLab par un modèle d’IA\n• \nRéalisation de benchmarks de différents LLM, développement d’une pipeline CI/CD\nCompétences travaillées : GitLab, CI/CD, Python, Yaml, API OpenAI\nFormations\nESILV Paris, Master – Majeure Data & IA \nSept. 2021 – présent\n• \nSpécialisation dans l’application de méthodes de Machine Learning et la visualisation de données\n• \nFormation Soft Skills : Design Thinking, Coopération en équipe, MBTI, méthodologie Scrum\n• \nParticipation à un hackathon intra-école / Sujet : développer une application de tri de déchets\n• \nOption : parcours High Performance Computing & IA\nUniversité d’Hanyang, Echange universitaire, Séoul, Corée du Sud Sept. 2025 – Déc. 2025\n• \nApplications des modèles d’IA dans la finance - Projets: webapp (voir ci-dessus), vision par ordinateur\nUniversitat de Vic, Echange universitaire, Vic, Espagne Févr. 2024 – Juin 2024\n• \nProjet de 3 mois - Développement d’une application en C# et d’une base de données MySQL\nCompétences & autres\nLangages de programmation : Python, C#, JavaScript, C, SQL\nOutils et logiciels : Github, PowerBI, Docker, Figma, Supabase, Pack Office\nSoft skills : méthode Agile & Scrum, Design Thinking, esprit d’équipe, adaptabilité\nLangues : Français (langue maternelle), Anglais C1 (TOEFL ITP 640/677)\nCentres d’intérêt : sport (musculation, escalade), jeux vidéos, lecture, voyages"
+      }
+    ],
+    "Merge": [
+      {
+        "id": "4325404036a@gmail.com",
+        "description": "We are looking for an experienced Full Stack Developer to join our growing team. You will work on cutting-edge projects using modern technologies.",
+        "resume": "Nicolas DESJONQUERES\nRecherche de stage – Data Scientist / AI Engineer\nParis, France | nicolas.desjonqueres@gmail.com | +33 7 69 66 62 88 | linkedin.com/in/ndesjonqueres\ngithub.com/ndesjonq\nProfil\nÉtudiant en M2 Data & IA à l’ESILV Paris, je recherche un stage de 6 mois à partir de janvier 2026 en Data Science\nou AI Engineering. Je suis particulièrement intéressé par le développement d’applications intégrant de l’IA, le\nMachine Learning appliqué et la visualisation de données.\nExpériences\nProjet - Webapp fullstack avec workflows IA, Université d’Hanyang, Corée du Sud \nSeptembre 2025 - présent\n• \nDéveloppement d’une webapp pour automatiser la recherche, le filtrage et la réponse aux offres d’emploi\n• \nBackend FastAPI et frontend React + TypeScript connectés à MongoDB Atlas\n• \nAutomatisation de workflows avec n8n pour l’ingestion des offres et l’analyse de CV, utilisation de l’API OpenAI\n• \nDéploiement cloud sur Render, Vercel et n8n.cloud\nCompétences travaillées : React, TypeScript, FastAPI, MongoDB Atlas, n8n, API OpenAI, Docker, Render, Vercel\nStage - Analyste de données, Natixis CIB - Paris, France Avril 2025 – Août 2025\n• \nCréation d’un dashboard PowerBI. Sujet : données de contrôles sur des opérations financières\n• \nImplémentation de méthodes de Machine Learning pour la prédiction de stocks d’anomalies\nCompétences travaillées : SQL, PowerBI, Python, Machine Learning\nProjet - Revue de code assistée par un LLM, ESILV x Coreoz - Paris, France Sept. 2024 – Févr. 2025\n• \nProjet de 6 mois avec une équipe de 5 étudiants en collaboration avec Coreoz, entreprise de consulting digital\n• \nMise en place d’une solution de revue de code automatisée sur un repository GitLab par un modèle d’IA\n• \nRéalisation de benchmarks de différents LLM, développement d’une pipeline CI/CD\nCompétences travaillées : GitLab, CI/CD, Python, Yaml, API OpenAI\nFormations\nESILV Paris, Master – Majeure Data & IA \nSept. 2021 – présent\n• \nSpécialisation dans l’application de méthodes de Machine Learning et la visualisation de données\n• \nFormation Soft Skills : Design Thinking, Coopération en équipe, MBTI, méthodologie Scrum\n• \nParticipation à un hackathon intra-école / Sujet : développer une application de tri de déchets\n• \nOption : parcours High Performance Computing & IA\nUniversité d’Hanyang, Echange universitaire, Séoul, Corée du Sud Sept. 2025 – Déc. 2025\n• \nApplications des modèles d’IA dans la finance - Projets: webapp (voir ci-dessus), vision par ordinateur\nUniversitat de Vic, Echange universitaire, Vic, Espagne Févr. 2024 – Juin 2024\n• \nProjet de 3 mois - Développement d’une application en C# et d’une base de données MySQL\nCompétences & autres\nLangages de programmation : Python, C#, JavaScript, C, SQL\nOutils et logiciels : Github, PowerBI, Docker, Figma, Supabase, Pack Office\nSoft skills : méthode Agile & Scrum, Design Thinking, esprit d’équipe, adaptabilité\nLangues : Français (langue maternelle), Anglais C1 (TOEFL ITP 640/677)\nCentres d’intérêt : sport (musculation, escalade), jeux vidéos, lecture, voyages",
+        "coverLetter": "Dear Hiring Manager,\n\nI am writing to express my keen interest in the Full Stack Developer position. As an M2 Data & AI student at ESILV Paris, currently seeking a 6-month internship, my experience developing integrated AI applications and working with modern technologies aligns well with the demands of this role.\n\nMy recent project at Hanyang University involved the development of a full-stack web application designed to automate job search and application workflows. This project provided hands-on experience with a FastAPI backend and a React + TypeScript frontend, connected to MongoDB Atlas, and deployed to cloud platforms like Render and Vercel. This directly reflects my capability to build and deploy complex applications using a comprehensive range of modern full-stack tools.\n\nFurthermore, my collaboration with Coreoz on an AI-assisted code review solution involved setting up an automated code review system on a GitLab repository and developing a CI/CD pipeline. This experience demonstrates my proficiency in continuous integration and deployment practices, essential for cutting-edge projects. Additionally, my work at Universitat de Vic included developing an application in C# with a MySQL database, reinforcing my skills in application and database development.\n\nI am enthusiastic about the opportunity to contribute to your company’s innovative projects. My background in AI and practical full-stack development makes me a strong candidate, and I am eager to discuss how my skills can benefit your team.\n\nSincerely,\nNicolas DESJONQUERES"
+      }
+    ],
+    "Edit Fields1": [
+      {
+        "coverLetter": "Dear Hiring Manager,\n\nI am writing to express my keen interest in the Full Stack Developer position. As an M2 Data & AI student at ESILV Paris, currently seeking a 6-month internship, my experience developing integrated AI applications and working with modern technologies aligns well with the demands of this role.\n\nMy recent project at Hanyang University involved the development of a full-stack web application designed to automate job search and application workflows. This project provided hands-on experience with a FastAPI backend and a React + TypeScript frontend, connected to MongoDB Atlas, and deployed to cloud platforms like Render and Vercel. This directly reflects my capability to build and deploy complex applications using a comprehensive range of modern full-stack tools.\n\nFurthermore, my collaboration with Coreoz on an AI-assisted code review solution involved setting up an automated code review system on a GitLab repository and developing a CI/CD pipeline. This experience demonstrates my proficiency in continuous integration and deployment practices, essential for cutting-edge projects. Additionally, my work at Universitat de Vic included developing an application in C# with a MySQL database, reinforcing my skills in application and database development.\n\nI am enthusiastic about the opportunity to contribute to your company’s innovative projects. My background in AI and practical full-stack development makes me a strong candidate, and I am eager to discuss how my skills can benefit your team.\n\nSincerely,\nNicolas DESJONQUERES"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8bca5b7436d6d5fb8d794ed17059555f4652e184f7ceb0dc0599435ae3140d1f"
+  }
+}

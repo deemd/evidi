@@ -1,0 +1,400 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2b5039b5-64a4-4caa-afc7-579bf1f6e1a5",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "174f71be-f096-4337-82e8-8399454f8b6f",
+      "name": "Webhook",
+      "webhookId": "2b5039b5-64a4-4caa-afc7-579bf1f6e1a5"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -208,
+        48
+      ],
+      "id": "b920c4c1-63b3-466f-88f6-7ae04c2615c8",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "findOneAndUpdate",
+        "collection": "users",
+        "updateKey": "=email",
+        "fields": "=resume,filters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mongoDb",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        -16
+      ],
+      "id": "f480196e-b88b-44c5-9440-42a3116d7f96",
+      "name": "Find and update documents",
+      "credentials": {
+        "mongoDb": {
+          "id": "M5eG0IvN4gC006sz",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0c8f686-be19-475c-8864-0be360b800cc",
+              "name": "resume",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        48
+      ],
+      "id": "8447bb62-9f97-416f-a4c0-afa3a0bb1c57",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b9d4949-c4fe-4dd4-ad97-93077d127ed6",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        -112
+      ],
+      "id": "606fa4ff-07e4-4fbd-9dc4-4fca8cdcd8fc",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "523ad75d-6589-4ae2-8b25-1e593546719c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this resume and extract:\n1. The full resume text\n2. Technical skills (stack)\n3. Experience level (Junior, Mid-level, Senior, Lead, etc.)\n4. Preferred locations\n5. Job type preferences (Full-Time, Part-Time, Contract, Internship)\n6. Relevant keywords from the resume\n\nResume content:\n{{ $json.resume }}\n\nUser email: {{ $json.email }}\n\nReturn the data in the exact JSON format specified by the output parser.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a resume analysis expert. Extract information accurately and format it according to the schema. If information is not found, use empty arrays. For experience level, choose ONE from: Junior, Mid-level, Senior, Lead, or leave empty if unclear."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "ca432e78-4b4f-4965-afb2-b1e9be6e0285",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e63ce5f-543c-4258-9197-01dfbf1df869",
+              "name": "email",
+              "value": "={{ $('Merge').item.json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "ff60fa44-be0a-483a-af86-114752820b12",
+              "name": "resume",
+              "value": "={{ $('Merge').item.json.resume }}",
+              "type": "string"
+            },
+            {
+              "id": "b3b899cd-16a7-4975-91c3-b71cb95aa8c2",
+              "name": "filters",
+              "value": "={{ $json.output.filters }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -16
+      ],
+      "id": "8f85d188-6127-4443-9459-c7a9570081f2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"resume\": \"Full resume text extracted from the PDF\",\n  \"filters\": {\n    \"stack\": [\"React\", \"Node.js\", \"TypeScript\"],\n    \"experience\": [\"Senior\", \"Junior\"],\n    \"keywords\": [\"leadership\", \"agile\"],\n    \"location\": [\"Remote\", \"Paris\"],\n    \"jobType\": [\"Full-Time\", \"PArt-Time\", \"Internship\"],\n    \"excludeKeywords\": [\"Paris\", \"Full-Time\", \"Python\", \"Senior\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        192
+      ],
+      "id": "35a00f9c-050a-434f-83c0-69f6eceb0ffc",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        528,
+        192
+      ],
+      "id": "cc9e4077-f3fc-4b9e-938b-1f030c419d38",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eF99RZquFBIYFueV",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "success",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1648,
+        -16
+      ],
+      "id": "6d780ccd-8fed-4772-a2c2-3f1226f11712",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "*1. Retrieve Resume Pdf + User Preferences (Filters)*",
+        "height": 416,
+        "width": 576,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "8d4d05d0-46da-4852-9a7c-24d7d3043d43",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "*2. Extract Resume Data (Gmini 2.5 Flash API Ai Agent)*",
+        "height": 448,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "253cb9ed-c478-4002-86c2-b90280c8a761",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "*3. Format Data + Actualize Filters + Store Item in MongoDB*",
+        "height": 288,
+        "width": 640,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1184,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "c4d97214-cf73-419c-ac6a-e72271929d2d",
+      "name": "Sticky Note2"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find and update documents": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Find and update documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8bca5b7436d6d5fb8d794ed17059555f4652e184f7ceb0dc0599435ae3140d1f"
+  }
+}
